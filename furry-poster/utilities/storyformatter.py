@@ -5,9 +5,7 @@ import bs4
 import os
 
 def parsetags(paragraph):
-    """
-    Parse HTML tags to add markdown tags to text
-    """
+    """Parse HTML tags to add markdown tags to text"""
     toreturn = ''
     if paragraph.text != '': 
         for child in paragraph.children:
@@ -20,9 +18,7 @@ def parsetags(paragraph):
     return toreturn
 
 def findFiles(directory):
-    """
-    Function to format all files in a directory
-    """
+    """Function to format all files in a directory"""
     files = os.listdir(directory)
     #create list of all html files in directory
     htmls = [(directory + '\\' + file) for file in files if file.endswith('html')]
@@ -31,9 +27,7 @@ def findFiles(directory):
         format(htmlpage)
 
 def format(htmlfile):
-    """
-    Format a specified HTML file
-    """
+    """Format a specified HTML file"""
     with open(htmlfile, 'r', encoding='utf-8') as file:
         page = bs4.BeautifulSoup(file, 'html.parser')
         paragraphs = page.findAll('p')
