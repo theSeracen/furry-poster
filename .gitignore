@@ -480,4 +480,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/furry-poster/cookies.txt
+*cookies.txt
