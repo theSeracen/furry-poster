@@ -1,6 +1,6 @@
 """Module for FurAffinity and an interface for posting stories to it"""
 
-from website import Website,AuthenticationError, WebsiteError
+from website import Website, AuthenticationError, WebsiteError
 import bs4
 import requests
 import http.cookiejar
@@ -14,16 +14,36 @@ class FurAffinity(Website):
 	def submitStory(self, title, description, tags, story, thumbnail):
 		"""Send story and submit it via POST"""
 		#this is the set data to select story type
-		params = {'part': 5, 'submission_type':'story', 'submission': story, 'thumbnail': thumbnail, 'title': title, 'message':description, 'keywords': description, 'scrap':0, 'rating': 2}
-		submit = requests.post('https://www.furaffinity.net/submit/story/4', cookies=self.cookie, data=params)
-		if 'Security code missing or invalid' in submit.text: raise WebsiteError("FurAffinity submission failed")
+		s = requests.Session()
+		s.cookies = self.cookie
 
+		#type selection
+		page = s.post('http://www.furaffinity.net/submit/', data={'part': 2, 'submission_type':'story'})
+		key = bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'key'})['value']
+
+		#file upload stage
+		uploadFiles = {'submission': story, 'thumbnail':thumbnail}
+		page = s.post('http://www.furaffinity.net/submit/', data={'part': 3, 'submission_type':'story', 'key':key}, files=uploadFiles)
+		if 'Error encountered' in page.text: raise WebsiteError('Error encounted with file upload')
+
+		#final stage
+		cat = bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'cat_duplicate'})['value']
+		key = bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'key'})['value']
+
+		#TODO add customisation for hardcoded specifications and categories
+		params = {'key': key, 'part':5, 'cat_duplicate':cat, 'submission_type':'story',
+			'atype':1, 'species':1, 'gender':0, 'rating': 1,
+			'title':title, 'message':description,'keywords':tags,
+			'scrap': 1}
+
+		page = s.post('https://www.furaffinity.net/submit/story/4', data=params)
+		if 'Security code missing or invalid' in page.text or 'view' not in page.url: raise WebsiteError("FurAffinity submission failed")
 
 	def testAuthentication(self):
 		"""Test that the user is properly authenticated on the site"""
 		#try to get a restricted page and error on bad result
-		testpage = requests.get("https://www.furaffinity.net/controls/settings/", cookies=self.cookies)
-		if "Please log in!" in testpage.content: raise AuthenticationError("FurAffinity authentication failed")
+		testpage = requests.get("https://www.furaffinity.net/controls/settings/", cookies=self.cookie)
+		if "Please log in!" in testpage.text: raise AuthenticationError("FurAffinity authentication failed")
 
 
 	def validateTags(self, tags):
