@@ -1,6 +1,10 @@
-"""Abstract Website class for creating proper website interfaces to a real website"""
+"""Contains abstract Website class for creating proper website interfaces to a real website, with errors for module/website related issues"""
 
 from abc import ABC, abstractmethod
+
+class WebsiteError(Exception): pass
+
+class AuthenticationError(WebsiteError):pass
 
 class Website(ABC):
     def __init__(self, name, csvTags=False):
