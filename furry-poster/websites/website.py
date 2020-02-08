@@ -7,9 +7,8 @@ class WebsiteError(Exception): pass
 class AuthenticationError(WebsiteError):pass
 
 class Website(ABC):
-	def __init__(self, name, csvTags=False):
+	def __init__(self, name):
 		self.name = name
-		self.csvTags = csvTags
 
 	@abstractmethod
 	def submitStory(self, title, description, tags, story, thumbnail):
