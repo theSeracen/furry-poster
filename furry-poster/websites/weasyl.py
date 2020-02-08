@@ -1,5 +1,5 @@
 """Module for Weasyl support"""
-from website import Website, WebsiteError, AuthenticationError
+from websites.website import Website, WebsiteError, AuthenticationError
 import requests
 import bs4
 import http.cookiejar
