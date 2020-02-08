@@ -16,10 +16,13 @@ class SoFurry(Website):
 		s = requests.Session()
 		s.cookies = self.cookie
 		tags = self.validateTags(tags)
+		#sofurry requires text to be submitted, not a story file
 		story = ''.join(story.readlines())
+
 		page = s.get('https://www.sofurry.com/upload/details?contentType=0')
 		secret = bs4.BeautifulSoup(page.content,'html.parser').find('input',{'name':'UploadForm[P_id]'})['value']
 		token = re.search("site_csrf_token_value = \'(.*)\'", page.text).group(1)
+
 		params = {'UploadForm[P_id]': secret, 'UploadForm[P_title]':title, 'UploadForm[textcontent]':story,
 			'UploadForm[contentLevel]':1, 'UploadForm[description]':description, 'UploadForm[formtags]':tags,
 			'YII_CSRF_TOKEN':token, 'save':'publish'}
