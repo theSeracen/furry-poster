@@ -1,7 +1,6 @@
 """Module for FurAffinity and an interface for posting stories to it"""
 
-from website import Website
-from websiteerrors import AuthenticationError, WebsiteError
+from website import Website,AuthenticationError, WebsiteError
 import bs4
 import requests
 import http.cookiejar
