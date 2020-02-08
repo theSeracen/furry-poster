@@ -3,12 +3,12 @@
 from abc import ABC, abstractmethod
 
 class Website(ABC):
-    def __init__(self, name, csvTags=false):
+    def __init__(self, name, csvTags=False):
         self.name = name
         self.csvTags = csvTags
 
     @abstractmethod
-    def submitStory(self):
+    def submitStory(self, title, description, tags, story, thumbnail):
         """Send story and submit it via website mechanisms"""
         pass
 
