@@ -9,12 +9,15 @@ class Website(ABC):
 
     @abstractmethod
     def submitStory(self):
+        """Send story and submit it via website mechanisms"""
         pass
 
     @abstractmethod
     def testAuthentication(self):
+        """Test that the user is properly authenticated on the site"""
         pass
 
     @abstractmethod
     def validateTags(self):
+        """Convert the given tag string to a form that is valid on the site"""
         pass
