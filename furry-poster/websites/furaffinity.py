@@ -13,9 +13,10 @@ class FurAffinity(Website):
 
 	def submitStory(self, title, description, tags, story, thumbnail):
 		"""Send story and submit it via POST"""
-		#this is the set data to select story type
+		
 		s = requests.Session()
 		s.cookies = self.cookie
+		tags = self.validateTags(tags)
 
 		#type selection
 		page = s.post('http://www.furaffinity.net/submit/', data={'part': 2, 'submission_type':'story'})
