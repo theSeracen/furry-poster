@@ -1,3 +1,5 @@
+"""Abstract Website class for creating proper website interfaces to a real website"""
+
 from abc import ABC, abstractmethod
 
 class Website(ABC):
