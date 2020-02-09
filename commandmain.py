@@ -108,6 +108,11 @@ def main():
 	if args.description is None: args.description = input('Please enter a description: ')
 	if args.tags is None: args.tags = input('Please enter CSV tags: ')
 
+	#error checking
+	if args.title == '': raise Exception('No title specified!')
+	if args.description == '': raise Exception('No description specified!')
+	if args.tags == '': raise Exception('No tags specified!')
+
 	if args.convert:
 		print('Story conversion commencing...')
 		findFiles(args.directory)
