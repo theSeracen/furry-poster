@@ -1,7 +1,7 @@
 import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError
-from furryposter.utilities.storyformatter import findFiles
+from furryposter.utilities.htmlformatter import findFiles
 import os
 import re
 import http.cookiejar
