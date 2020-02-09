@@ -116,22 +116,18 @@ def main():
 
 	if args.convert:
 		print('Story conversion commencing...')
-		if args.format.tolower() == 'html': htmlformatter.findFiles(args.directory)
-		if args.format.tolower() == 'markdown': markdownformatter.findFiles(args.directory)
+		if args.format.lower() == 'html': htmlformatter.findFiles(args.directory)
+		if args.format.lower() == 'markdown': markdownformatter.findFiles(args.directory)
 	
 	#prioritise formatted stories
 	storyLoc = None
-	for file in os.listdir(args.directory):
-		if file.endswith('formatted.txt'): 
+	ends = ['formatted.txt','.txt']
+	for file, ending in ((file, ending) for ending in ends for file in os.listdir(args.directory)):
+		if file.endswith(ending): 
 			storyLoc = args.directory + '\\' + file
-			print('Formatted file found')
+			print('Formatted file found: {}'.format(storyLoc))
 			break
-	if storyLoc is None:
-		for file in os.listdir(args.directory):
-			if file.endswith('.txt'): 
-				storyLoc = args.directory + '\\' + file
-				print('Unformatted file found')
-				break
+
 	if storyLoc is None: raise Exception('No story file found!')
 
 	#get thumbnail
