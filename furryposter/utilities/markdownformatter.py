@@ -3,7 +3,7 @@
 import os
 import re
 
-def scanFolderBBcode(directory):
+def findFiles(directory):
 	files = os.listdir(directory)
 	#create list of all markdown files in directory
 	markdowns = [(directory + '\\' + file) for file in files if file.endswith('.mmd')]
@@ -51,4 +51,4 @@ def formatFileBBcode(file):
 			
 if __name__ == '__main__':
 	directory = input('Enter directory: ')
-	scanFolderBBcode(directory)
+	findFiles(directory)
