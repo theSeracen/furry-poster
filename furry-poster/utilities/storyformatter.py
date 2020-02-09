@@ -35,7 +35,7 @@ def format(htmlfile):
 		#build list of formatted strings, centring if necessary
 		story = [("[center]" + parsetags(paragraph) + "[/center]" + '\n\n') if ('align' in paragraph.attrs) else (parsetags(paragraph) + '\n\n') for paragraph in paragraphs]
 
-		with open(htmlfile.split('.')[0] + 'FA.txt','w',encoding='UTF-8') as storyfile:
+		with open(htmlfile.split('.')[0] + 'formatted.txt','w',encoding='UTF-8') as storyfile:
 			for part in story:
 				storyfile.write(part)
 	
