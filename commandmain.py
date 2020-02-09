@@ -1,7 +1,7 @@
 import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError
-from furryposter.utilities.htmlformatter import findFiles
+from furryposter.utilities import htmlformatter, markdownformatter
 import os
 import re
 import http.cookiejar
@@ -23,6 +23,7 @@ def initParser():
 	parser.add_argument('-k','--tags', help="List of CSV for the story tags")
 	parser.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-c', '--convert', action='store_true',help='Flag for whether a HTML file should be directed')
+	parser.add_argument('-f','--format', choices =['html','markdown'], default='html', help='Option to choose the source story file format. Default is HTML')
 
 def main():
 	initParser()
@@ -115,7 +116,8 @@ def main():
 
 	if args.convert:
 		print('Story conversion commencing...')
-		findFiles(args.directory)
+		if args.format.tolower() == 'html': htmlformatter.findFiles(args.directory)
+		if args.format.tolower() == 'markdown': markdownformatter.findFiles(args.directory)
 	
 	#prioritise formatted stories
 	storyLoc = None
