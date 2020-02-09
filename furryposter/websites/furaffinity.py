@@ -35,7 +35,7 @@ class FurAffinity(Website):
 		params = {'key': key, 'part':5, 'cat_duplicate':cat, 'submission_type':'story',
 			'atype':1, 'species':1, 'gender':0, 'rating': 1,
 			'title':title, 'message':description,'keywords':tags,
-			'scrap': 1}
+			'scrap': 0}
 
 		page = s.post('https://www.furaffinity.net/submit/story/4', data=params)
 		if 'Security code missing or invalid' in page.text or 'view' not in page.url: raise WebsiteError("FurAffinity submission failed")
