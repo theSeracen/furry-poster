@@ -26,7 +26,9 @@ class SoFurry(Website):
 		params = {'UploadForm[P_id]': secret, 'UploadForm[P_title]':title, 'UploadForm[textcontent]':story,
 			'UploadForm[contentLevel]':1, 'UploadForm[description]':description, 'UploadForm[formtags]':tags,
 			'YII_CSRF_TOKEN':token, 'save':'publish'}
-		uploadFiles = {'UploadForm[binarycontent_5]':thumbnail}
+
+		if thumbnail is not None :uploadFiles = {'UploadForm[binarycontent_5]':thumbnail}
+		else: uploadFiles = None
 
 		page = s.post('https://www.sofurry.com/upload/details?contentType=0', files=uploadFiles, data=params)
 		if page.status_code != 200: raise WebsiteError('SoFurry story upload failed')

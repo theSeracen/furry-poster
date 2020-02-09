@@ -149,7 +149,11 @@ def main():
 	#submit the files to each website
 	for site in sites:
 		try:
-			site.submitStory(args.title, args.description, args.tags, open(storyLoc, 'r',encoding='utf-8'), open(thumbnailLoc, 'rb'))
+			if thumbnailLoc is None: thumbnailPass = None
+			else: thumbnailPass = open(thumbnailLoc, 'rb')
+
+			print('Beginning {} submission'.format(site.name))
+			site.submitStory(args.title, args.description, args.tags, open(storyLoc, 'r',encoding='utf-8'), thumbnailPass)
 			print('{} submission completed successfully'.format(site.name))
 		except WebsiteError as e:
 			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
