@@ -1,26 +1,26 @@
 """Module for converting BBcode tags"""
 import re
 
-def parseStringMarkdown(line):
+def parseStringMarkdown(line: str) -> str:
 	"""Converts a string of BBcode to markdown formatting"""
 	formattingFunctions = [boldBBcodetoMarkdown, italicsBBcodetoMarkdown, linksBBBcodetoMarkdown]
 	for formatfunc in formattingFunctions:
 		line = formatfunc(line)
 	return line
 
-def italicsBBcodetoMarkdown(line):
+def italicsBBcodetoMarkdown(line: str) -> str:
 	tags = ['[I]','[i]','[/I]','[/i]']
 	for tag in tags:
 		line = line.replace(tag, '*')
 	return line
 
-def boldBBcodetoMarkdown(line):
+def boldBBcodetoMarkdown(line: str) -> str:
 	tags = ['[B]','[b]','[/B]','[/b]']
 	for tag in tags:
 		line = line.replace(tag, '**')
 	return line
 
-def linksBBBcodetoMarkdown(line):
+def linksBBBcodetoMarkdown(line: str) -> str:
 	simplePattern = r'\[URL\](.*?)\[/URL\]'
 	complexPattern = r'\[URL=(.*?)\](.*?)\[/URL\]'
 	subs = []

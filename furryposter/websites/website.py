@@ -1,6 +1,7 @@
 """Contains abstract Website class for creating proper website interfaces to a real website, with errors for module/website related issues"""
 
 from abc import ABC, abstractmethod
+from typing import TextIO, BinaryIO
 
 class WebsiteError(Exception): pass
 
@@ -11,7 +12,7 @@ class Website(ABC):
 		self.name = name
 
 	@abstractmethod
-	def submitStory(self, title, description, tags, story, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
 		"""Send story and submit it via website mechanisms"""
 		pass
 
@@ -21,6 +22,6 @@ class Website(ABC):
 		pass
 
 	@abstractmethod
-	def validateTags(self):
+	def validateTags(self, tags: str):
 		"""Convert the given tag string to a form that is valid on the site"""
 		pass

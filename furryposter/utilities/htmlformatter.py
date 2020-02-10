@@ -4,7 +4,7 @@ Module for converting HTML story files to markdown-formatted text as used on FA 
 import bs4
 import os
 
-def parsetags(paragraph):
+def parsetags(paragraph: str) -> str:
 	"""Parse HTML tags to add markdown tags to text"""
 	toreturn = ''
 	if paragraph.text != '': 
@@ -17,7 +17,7 @@ def parsetags(paragraph):
 				toreturn = toreturn + child.text
 	return toreturn
 
-def findFiles(directory):
+def findFiles(directory: str):
 	"""Function to format all files in a directory"""
 	files = os.listdir(directory)
 	#create list of all html files in directory
@@ -26,7 +26,7 @@ def findFiles(directory):
 	for htmlpage in htmls:
 		format(htmlpage)
 
-def format(htmlfile):
+def format(htmlfile: str):
 	"""Format a specified HTML file"""
 	with open(htmlfile, 'r', encoding='utf-8') as file:
 		page = bs4.BeautifulSoup(file, 'html.parser')

@@ -5,13 +5,14 @@ import requests
 import bs4
 import http.cookiejar
 import re
+from typing import TextIO, BinaryIO
 
 class SoFurry(Website):
 	def __init__(self, cookies):
 		Website.__init__(self, 'sofurry')
 		self.cookie = cookies
 
-	def submitStory(self, title, description, tags, story, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
 		s = requests.Session()
 		s.cookies = self.cookie
@@ -38,7 +39,7 @@ class SoFurry(Website):
 		testpage = requests.get("https://sofurry.com/upload", cookies=self.cookie)
 		if 'Access Denied' in testpage.text: raise AuthenticationError("SoFurry authentication failed")
 
-	def validateTags(self, tags):
+	def validateTags(self, tags: str) -> str:
 		#no validation needed for SoFurry; accepts CSV
 		return tags
 

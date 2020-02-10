@@ -5,6 +5,7 @@ from furryposter.utilities import markdownformatter
 import bs4
 import requests
 import http.cookiejar
+from typing import TextIO, BinaryIO
 
 class FurAffinity(Website):
 	"""Class for a FurAffinity object"""
@@ -12,7 +13,7 @@ class FurAffinity(Website):
 		Website.__init__(self, 'furaffinity')
 		self.cookie = cookies
 
-	def submitStory(self, title, description, tags, story, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
 		
 		s = requests.Session()
@@ -50,7 +51,7 @@ class FurAffinity(Website):
 		if "Please log in!" in testpage.text: raise AuthenticationError("FurAffinity authentication failed")
 
 
-	def validateTags(self, tags):
+	def validateTags(self, tags: str) -> str:
 		"""Convert the given tag string to a form that is valid on the site"""
 		return tags.replace(', ',' ')
 

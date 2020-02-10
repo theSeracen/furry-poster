@@ -4,20 +4,21 @@ import requests
 import bs4
 import http.cookiejar
 import re
+from typing import TextIO, BinaryIO
 
 class Weasyl(Website):
 	def __init__(self, cookies):
 		Website.__init__(self, 'weasyl')
 		self.cookie = cookies
 
-	def validateTags(self,tags):
+	def validateTags(self,tags: str) -> str:
 		return tags.replace(', ',' ')
 
 	def testAuthentication(self):
 		page = requests.get('https://www.weasyl.com/messages/notifications', cookies=self.cookie)
 		if 'You must be signed in to perform this operation.' in page.text: raise AuthenticationError('Weasyl authentication failed')
 	
-	def submitStory(self, title, description, tags, story, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
 		
 		s = requests.Session()
 		s.cookies = self.cookie
