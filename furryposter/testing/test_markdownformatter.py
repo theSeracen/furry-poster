@@ -36,7 +36,7 @@ class TestMarkdownFormatting(unittest.TestCase):
 	def test_complex(self):
 		teststrings = ['This *is* a **complicated** string with ***many*** [BBcode](test.com) options like <example.net> for example']
 		results = [markdownformatter.parseStringBBcode(string) for string in teststrings]
-		self.assertListEqual(results, ['This [I]is[/I] a [B]complicated[/B] string with [I][B]many[/B][/I] [URL=test.com]BBcode[/URL] options like [URL]example.net[/URL] for example'])
+		self.assertListEqual(results, ['This [I]is[/I] a [B]complicated[/B] string with [B][I]many[/I][/B] [URL=test.com]BBcode[/URL] options like [URL]example.net[/URL] for example'])
 
 
 if __name__ == '__main__':
