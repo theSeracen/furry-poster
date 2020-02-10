@@ -11,11 +11,24 @@ def findFiles(directory):
 		formatFileBBcode(markdownfile)
 
 def parseStringBBcode(line):
-	formattingFunctions = [strongMarkdowntoBBcode, boldMarkdowntoBBcode, italicMarkdowntoBBcode]
+	formattingFunctions = [strongMarkdowntoBBcode, boldMarkdowntoBBcode, italicMarkdowntoBBcode, linkMarkdowntoBBcode]
 	for formatFunc in formattingFunctions:
 		line = formatFunc(line)
 	return line
-	
+
+def linkMarkdowntoBBcode(line):
+	#first format for links
+	if re.search(r'\[.*\]\((http|www)?.*\)', line): 
+		link = re.search(r'\[(.*)\]\(((http|www)?.*)\)', line)
+		return '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]'
+	#second format for links
+	elif re.search(r'<(.*)>',line):
+		link = re.search(r'<(.*)>',line)
+		return '[URL]' + link.group(1) + '[/URL]'
+	else: 
+		return line
+
+
 def boldMarkdowntoBBcode(line):
 	"""Takes a string and returns a single BBcode string with bold formatting"""
 	#explode into bold parts
