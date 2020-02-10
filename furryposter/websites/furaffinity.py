@@ -1,6 +1,7 @@
 """Module for FurAffinity and an interface for posting stories to it"""
 
 from furryposter.websites.website import Website, AuthenticationError, WebsiteError
+from furryposter.utilities import markdownformatter
 import bs4
 import requests
 import http.cookiejar
@@ -17,6 +18,7 @@ class FurAffinity(Website):
 		s = requests.Session()
 		s.cookies = self.cookie
 		tags = self.validateTags(tags)
+		description = markdownformatter.parseStringBBcode(description)
 
 		#type selection
 		page = s.post('http://www.furaffinity.net/submit/', data={'part': 2, 'submission_type':'story'})
