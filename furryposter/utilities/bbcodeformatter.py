@@ -2,6 +2,7 @@
 import re
 
 def parseStringMarkdown(line):
+	"""Converts a string of BBcode to markdown formatting"""
 	formattingFunctions = [boldBBcodetoMarkdown, italicsBBcodetoMarkdown, linksBBBcodetoMarkdown]
 	for formatfunc in formattingFunctions:
 		line = formatfunc(line)
