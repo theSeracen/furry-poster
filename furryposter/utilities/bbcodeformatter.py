@@ -21,12 +21,14 @@ def boldBBcodetoMarkdown(line):
 	return line
 
 def linksBBBcodetoMarkdown(line):
-	if re.search(r'\[URL=(.*)\](.*)\[/URL\]', line):
-		link = re.search(r'\[URL=(.*)\](.*)\[/URL\]', line)
-		return re.sub(r'\[URL=(.*)\](.*)\[/URL\]','[' + link.group(2) + '](' + link.group(1) + ')', line)
-	elif re.search(r'\[URL\](.*)\[/URL\]',line):
-		link = re.search(r'\[URL\](.*)\[/URL\]',line)
-		return re.sub(r'\[URL\](.*)\[/URL\]','<' + link.group(1) + '>', line)
+	simplePattern = r'\[URL\](.*?)\[/URL\]'
+	complexPattern = r'\[URL=(.*?)\](.*?)\[/URL\]'
+	if re.search(complexPattern, line):
+		link = re.search(complexPattern, line)
+		return re.sub(complexPattern,'[' + link.group(2) + '](' + link.group(1) + ')', line)
+	elif re.search(simplePattern,line):
+		link = re.search(simplePattern,line)
+		return re.sub(simplePattern,'<' + link.group(1) + '>', line)
 	else:
 		return line
 
