@@ -23,7 +23,7 @@ def initParser():
 	parser.add_argument('-k','--tags', help="List of CSV for the story tags")
 	parser.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-c', '--convert', action='store_true',help='Flag for whether a HTML file should be directed')
-	parser.add_argument('-f','--format', choices =['html','markdown'], default='html', help='Option to choose the source story file format. Default is HTML')
+	parser.add_argument('-f','--format', choices =['html','markdown'], default='markdown', help='Option to choose the source story file format. Default is markdown')
 
 def main():
 	initParser()
