@@ -23,14 +23,14 @@ class TestBBcodeFormatting(unittest.TestCase):
 		self.assertListEqual(results,['***teststring***','***teststring***','this is a ***test string*** for bbcode'])
 
 	def test_linksimple(self):
-		teststrings = ['[URL]testing.com/[/URL]','[URL]testing.com[/URL]']
+		teststrings = ['[URL]testing.com/[/URL]','[URL]testing.com[/URL]','[URL]testing.com[/URL] [URL]example.net[/URL]']
 		results = [bbcodeformatter.parseStringMarkdown(string) for string in teststrings]
-		self.assertListEqual(results, ['<testing.com/>','<testing.com>'])
+		self.assertListEqual(results, ['<testing.com/>','<testing.com>','<testing.com> <example.net>'])
 
 	def test_linkcomplex(self):
-		teststrings = ['[URL=example.com]test link[/URL]']
+		teststrings = ['[URL=example.com]test link[/URL]', '[URL=example.com]test link[/URL][URL=second.test]other link[/URL]']
 		results = [bbcodeformatter.parseStringMarkdown(string) for string in teststrings]
-		self.assertListEqual(results, ['[test link](example.com)'])
+		self.assertListEqual(results, ['[test link](example.com)','[test link](example.com)[other link](second.test)'])
 
 	def test_complex(self):
 		teststrings = ['This [I]is[/I] a [B]complicated[/B] string with [I][B]many[/B][/I] [URL=test.com]BBcode[/URL] options like [URL]example.net[/URL] for example']
