@@ -18,18 +18,23 @@ def parseStringBBcode(line):
 	return line
 
 def linkMarkdowntoBBcode(line):
-	simple = r'\[(.*)\]\(((http|www)?.*)\)'
-	complex = r'<(.*)>'
-	#first format for links
-	if re.search(simple, line): 
-		link = re.search(simple, line)
-		return re.sub(simple, '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]',line)
-	#second format for links
-	elif re.search(complex,line):
-		link = re.search(complex,line)
-		return re.sub(complex,'[URL]' + link.group(1) + '[/URL]', line)
-	else: 
-		return line
+	simple = r'\[(.*?)\]\(((http|www)?.*?)\)'
+	complex = r'<(.*?)>'
+	subs = []
+	for match in re.findall(r'(({})|({}))'.format(simple, complex), line):
+		match = match[0]
+		#first format for links
+		if re.search(simple, match): 
+			link = re.search(simple, match)
+			subs.append((re.sub(simple, '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]',match), match))
+		#second format for links
+		elif re.search(complex,match):
+			link = re.search(complex,match)
+			subs.append((re.sub(complex,'[URL]' + link.group(1) + '[/URL]', match), match))
+
+	for (new, old) in subs:
+		line = line.replace(old,new)
+	return line
 
 
 def boldMarkdowntoBBcode(line):
