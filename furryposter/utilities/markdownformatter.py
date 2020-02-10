@@ -11,7 +11,7 @@ def findFiles(directory):
 		formatFileBBcode(markdownfile)
 
 def parseStringBBcode(line):
-	formattingFunctions = [strongMarkdowntoBBcode, boldMarkdowntoBBcode, italicMarkdowntoBBcode, linkMarkdowntoBBcode]
+	formattingFunctions = [linkMarkdowntoBBcode, strongMarkdowntoBBcode, boldMarkdowntoBBcode, italicMarkdowntoBBcode]
 	for formatFunc in formattingFunctions:
 		line = formatFunc(line)
 	return line
@@ -20,11 +20,11 @@ def linkMarkdowntoBBcode(line):
 	#first format for links
 	if re.search(r'\[.*\]\((http|www)?.*\)', line): 
 		link = re.search(r'\[(.*)\]\(((http|www)?.*)\)', line)
-		return '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]'
+		return re.sub(r'\[(.*)\]\(((http|www)?.*)\)','[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]',line)
 	#second format for links
 	elif re.search(r'<(.*)>',line):
 		link = re.search(r'<(.*)>',line)
-		return '[URL]' + link.group(1) + '[/URL]'
+		return re.sub(r'<(.*)>','[URL]' + link.group(1) + '[/URL]', line)
 	else: 
 		return line
 
@@ -63,5 +63,5 @@ def formatFileBBcode(file):
 		textfile.writelines(formatted)
 			
 if __name__ == '__main__':
-	directory = input('Enter directory: ')
-	findFiles(directory)
+	line = input('Enter test string: ')
+	print(parseStringBBcode(line))
