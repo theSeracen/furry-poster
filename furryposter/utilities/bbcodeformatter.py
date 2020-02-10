@@ -26,7 +26,7 @@ def linksBBBcodetoMarkdown(line):
 		return re.sub(r'\[URL=(.*)\](.*)\[/URL\]','[' + link.group(2) + '](' + link.group(1) + ')', line)
 	elif re.search(r'\[URL\](.*)\[/URL\]',line):
 		link = re.search(r'\[URL\](.*)\[/URL\]',line)
-		return re.sub(r'\[URL\](.*)\[/URL\]','[URL]' + link.group(1) + '[/URL]', line)
+		return re.sub(r'\[URL\](.*)\[/URL\]','<' + link.group(1) + '>', line)
 	else:
 		return line
 
