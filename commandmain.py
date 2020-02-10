@@ -24,6 +24,7 @@ def initParser():
 	parser.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-c', '--convert', action='store_true',help='Flag for whether a HTML file should be directed')
 	parser.add_argument('-f','--format', choices =['html','markdown'], default='markdown', help='Option to choose the source story file format. Default is markdown')
+	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 
 def main():
 	initParser()
@@ -114,6 +115,16 @@ def main():
 	if args.description == '': raise Exception('No description specified!')
 	if args.tags == '': raise Exception('No tags specified!')
 
+	if args.post_script:
+		if os.path.exists('post-script.txt'):
+			with open('post-script.txt','r',encoding='utf-8') as post:
+				args.description = args.description + '\n\n' + ''.join(post.readlines())
+		else:
+			if args.ignore_errrors:
+				print('Post-script file cannot be loaded!\nContinuing...')
+			else:
+				raise Exception('Post-script file cannot be found')
+
 	if args.convert:
 		print('Story conversion commencing...')
 		if args.format.lower() == 'html': htmlformatter.findFiles(args.directory)
@@ -125,7 +136,7 @@ def main():
 	for file, ending in ((file, ending) for ending in ends for file in os.listdir(args.directory)):
 		if file.endswith(ending): 
 			storyLoc = args.directory + '\\' + file
-			print('Formatted file found: {}'.format(storyLoc))
+			print('File found: {}'.format(storyLoc))
 			break
 
 	if storyLoc is None: raise Exception('No story file found!')
