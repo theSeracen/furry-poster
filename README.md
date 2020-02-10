@@ -10,9 +10,9 @@ This is a simple tool for uploading story files to several different furry art s
 
 Flags in the following section are optional. If flags for title, description, or tags are omitted a prompt will be given.
   - `-t, --title                  title for the story`
-  - `-d, --description            description for the story`
-  - `-k, --tags                   tags or keys to accompany upload`
-  - `-p, --thumbnail              look for and then upload thumbnail image`
+  - `-d, --description            description for the story; should be given in markdown format`
+  - `-k, --tags                   tags or keys to accompany upload; must be comma-separated`
+  - `-p, --thumbnail              look for and then upload a thumbnail image`
   - `-c, --convert                find a HTML file and convert it to a text file with BBcode markdown (specifically for FA but works for SoFurry and Weasyl`
   - `-f, --format                 choose from html, markdown for the source file of the story; defaults to markdown`
 ## Cookies
