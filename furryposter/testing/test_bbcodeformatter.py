@@ -32,6 +32,11 @@ class TestBBcodeFormatting(unittest.TestCase):
 		results = [bbcodeformatter.parseStringMarkdown(string) for string in teststrings]
 		self.assertListEqual(results, ['[test link](example.com)','[test link](example.com)[other link](second.test)'])
 
+	def test_linkmixed(self):
+		teststrings = ['[URL=example.com]test link[/URL][URL]test.net[/URL]']
+		results = [markdownformatter.parseStringBBcode(string) for string in teststrings]
+		self.assertListEqual(results, ['[test link](example.com) <test.net>'])
+
 	def test_complex(self):
 		teststrings = ['This [I]is[/I] a [B]complicated[/B] string with [I][B]many[/B][/I] [URL=test.com]BBcode[/URL] options like [URL]example.net[/URL] for example']
 		results = [bbcodeformatter.parseStringMarkdown(string) for string in teststrings]
