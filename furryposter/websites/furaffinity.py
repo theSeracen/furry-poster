@@ -12,7 +12,7 @@ class FurAffinity(Website):
 	def __init__(self):
 		Website.__init__(self, 'furaffinity', {'general':0, 'adult':1}, 'bbcode')
 		
-	def load(cookies):
+	def load(self, cookies):
 		self.cookie = cookies
 
 	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
@@ -59,21 +59,5 @@ class FurAffinity(Website):
 
 if __name__ == "__main__":
 	cj = http.cookiejar.MozillaCookieJar("cookies.txt")
-	cj.load()
-	fa = FurAffinity(cj)
-	
-	
-	title = input("Enter title: ")
-	description = input("Enter description: ")
-	tags = input("Enter tags: ")
-	directory = input("Enter directory: ")
-
-	import os
-	for file in os.listdir(directory):
-		if file.endswith('.txt'): story = directory + '\\' + file
-		if file.endswith('.png'): thumbnail = directory + '\\' + file
-	print(story)
-	print(thumbnail)
-	input('Press enter to confirm...')
-
-	fa.submitStory(title, description, tags, open(story, 'r', encoding='utf-8'), open(thumbnail, 'rb'))
+	site = FurAffinity()
+	site.testSite(cj)

@@ -1,12 +1,12 @@
 import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
-from furryposter.websites.website import AuthenticationError, WebsiteError
+from furryposter.websites.website import AuthenticationError, WebsiteError, Website
 from furryposter.utilities import htmlformatter, markdownformatter, bbcodeformatter
 import os
 import re
 import http.cookiejar
-from bs4 import BeautifulSoup
 from io import StringIO
+from typing import Optional
 
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
 
@@ -31,7 +31,7 @@ def initParser():
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
 
-def site_upload(cj_path: str, site, human_name: str ) -> Optional[Website]:
+def site_upload(cj_path: str, site: Website, ignore_errors: bool ) -> Optional[Website]:
 	loaded = False
 	if cj_path is not None:
 		cj = http.cookiejar.MozillaCookieJar(cj_path)
@@ -40,16 +40,16 @@ def site_upload(cj_path: str, site, human_name: str ) -> Optional[Website]:
 		loaded = True
 	
 	if loaded is True:
-		if args.ignore_errors is False:
-			raise AuthenticationError(human_name, 'cannot find a cookies file')
+		if ignore_errors is False:
+			raise AuthenticationError(site.name, 'cannot find a cookies file')
 		else:
-			print(human_name, 'cannot find cookies; the site will be skipped')
+			print(site.name, 'cannot find cookies; the site will be skipped')
 	else:
 		try:
 			site.testAuthentication()
 		except AuthenticationError as e:
-			if args.ignore_errors is True:
-				print(human_name, 'authentication failed!\nContinuing...')
+			if ignore_errors is True:
+				print(site.name, 'authentication failed!\nContinuing...')
 			else:
 				raise
 		else:
@@ -66,19 +66,19 @@ def main():
 	if args.furaffinity:
 		for file in os.listdir(os.getcwd()):
 			if re.match("^(furaffinity|fa)?(cookies?)?\\.txt", file):
-				sites.append(site_upload(file, furaffinity.FurAffinity(), "FurAffinity"))
+				sites.append(site_upload(file, furaffinity.FurAffinity(), args.ignore_errors))
 				break
 				
 	if args.sofurry:
 		for file in os.listdir(os.getcwd()):
 			if re.match("^(sofurry|sf)?(cookies?)?\\.txt", file):
-				sites.append(site_upload(file, sofurry.SoFurry(), "SoFurry"))
+				sites.append(site_upload(file, sofurry.SoFurry(), args.ignore_errors))
 				break
 				
 	if args.weasyl:
 		for file in os.listdir(os.getcwd()):
-			if re.match("^(weasyl|ws)?(cookies?)?\.txt", file):
-				sites.append(site_upload(file, weasyl.Weasyl(), "Weasyl"))
+			if re.match("^(weasyl|ws)?(cookies?)?\\.txt", file):
+				sites.append(site_upload(file, weasyl.Weasyl(), args.ignore_errors))
 				break
 	
 	sites = list(filter(None, sites))
@@ -127,7 +127,7 @@ def main():
 	thumbnailLoc = None
 	if args.thumbnail:
 		for file in os.listdir(args.directory):
-			if re.match('.*\.(png|jpg)', file):
+			if re.match('.*\\.(png|jpg)', file):
 				thumbnailLoc = args.directory + '\\' + file
 				print('Thumbnail file found')
 				break

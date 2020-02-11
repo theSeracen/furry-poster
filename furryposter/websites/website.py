@@ -27,3 +27,24 @@ class Website(ABC):
 	def validateTags(self, tags: str) -> str:
 		"""Convert the given tag string to a form that is valid on the site"""
 		pass
+	
+	def testSite(self, cj):
+		cj.load()
+		self.load(cj)
+		self.testAuthentication()
+		
+		title = input("Enter title: ")
+		description = input("Enter description: ")
+		tags = input("Enter tags: ")
+		directory = input("Enter directory: ")
+	
+		import os
+		for file in os.listdir(directory):
+			if file.endswith('.txt'): story = directory + '\\' + file
+			if file.endswith('.png'): thumbnail = directory + '\\' + file
+		print(story)
+		print(thumbnail)
+		input('Press enter to confirm...')
+	
+		self.submitStory(title, description, tags, open(story, 'r', encoding='utf-8'), open(thumbnail, 'rb'))
+		
