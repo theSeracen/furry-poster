@@ -201,8 +201,8 @@ def main():
 						raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
 
 			print('Beginning {} submission'.format(site.name))
-			if args.test: site.submitStory(args.title, args.description, args.tags, args.rating, story, thumbnailPass)
-			else: print('test: {} bypassed'.format(site.name))
+			if args.test: print('test: {} bypassed'.format(site.name))
+			else: site.submitStory(args.title, args.description, args.tags, args.rating, story, thumbnailPass)
 			print('{} submission completed successfully'.format(site.name))
 		except WebsiteError as e:
 			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
