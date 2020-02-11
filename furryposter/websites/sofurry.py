@@ -9,10 +9,10 @@ from typing import TextIO, BinaryIO
 
 class SoFurry(Website):
 	def __init__(self, cookies):
-		Website.__init__(self, 'sofurry')
+		Website.__init__(self, 'sofurry', {'general':0, 'adult':1})
 		self.cookie = cookies
 
-	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
 		s = requests.Session()
 		s.cookies = self.cookie
@@ -25,7 +25,7 @@ class SoFurry(Website):
 		token = re.search("site_csrf_token_value = \'(.*)\'", page.text).group(1)
 
 		params = {'UploadForm[P_id]': secret, 'UploadForm[P_title]':title, 'UploadForm[textcontent]':story,
-			'UploadForm[contentLevel]':1, 'UploadForm[description]':description, 'UploadForm[formtags]':tags,
+			'UploadForm[contentLevel]': self.ratings[passedRating], 'UploadForm[description]':description, 'UploadForm[formtags]':tags,
 			'YII_CSRF_TOKEN':token, 'save':'publish'}
 
 		if thumbnail is not None :uploadFiles = {'UploadForm[binarycontent_5]':thumbnail}

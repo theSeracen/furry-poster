@@ -8,7 +8,7 @@ from typing import TextIO, BinaryIO
 
 class Weasyl(Website):
 	def __init__(self, cookies):
-		Website.__init__(self, 'weasyl')
+		Website.__init__(self, 'weasyl', {'general':10, 'adult':40})
 		self.cookie = cookies
 
 	def validateTags(self,tags: str) -> str:
@@ -18,7 +18,7 @@ class Weasyl(Website):
 		page = requests.get('https://www.weasyl.com/messages/notifications', cookies=self.cookie)
 		if 'You must be signed in to perform this operation.' in page.text: raise AuthenticationError('Weasyl authentication failed')
 	
-	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		
 		s = requests.Session()
 		s.cookies = self.cookie
@@ -30,7 +30,7 @@ class Weasyl(Website):
 		if thumbnail is not None: uploadFiles = {'submitfile':story, 'coverfile':thumbnail}
 		else: uploadFiles = {'submitfile':story, 'coverfile': ''.encode('utf-8')}
 
-		params = {'token':token,'title':title, 'subtype':2010, 'rating':40,'content':description, 'tags':tags}
+		params = {'token':token,'title':title, 'subtype':2010, 'rating':self.ratings[passedRating],'content':description, 'tags':tags}
 
 		page = s.post('https://www.weasyl.com/submit/literary', data=params, files=uploadFiles)
 

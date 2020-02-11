@@ -10,10 +10,10 @@ from typing import TextIO, BinaryIO
 class FurAffinity(Website):
 	"""Class for a FurAffinity object"""
 	def __init__(self, cookies):
-		Website.__init__(self, 'furaffinity', 'bbcode')
+		Website.__init__(self, 'furaffinity', {'general':0, 'adult':1}, 'bbcode')
 		self.cookie = cookies
 
-	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
 		
 		s = requests.Session()
@@ -37,7 +37,7 @@ class FurAffinity(Website):
 
 		#TODO add customisation for hardcoded specifications and categories
 		params = {'key': key, 'part':5, 'cat_duplicate':cat, 'submission_type':'story',
-			'atype':1, 'species':1, 'gender':0, 'rating': 1,
+			'atype':1, 'species':1, 'gender':0, 'rating': self.ratings[passedRating],
 			'title':title, 'message':description,'keywords':tags,
 			'scrap': 0}
 

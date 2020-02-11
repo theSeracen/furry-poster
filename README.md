@@ -30,6 +30,7 @@ Flags in the following section are optional. Note that if flags for title, descr
   - `-k, --tags` -> tags or keys to accompany upload; must be comma-separated
   - `-p, --thumbnail` -> boolean flag for whether to look for and then submit a thumbnail. Note that if this flag is set, and a thumbnail cannot be found, an error will occur
   - `-f, --format` -> choose from `html`, `markdown`, or `text` for the source file format of the story; defaults to `markdown`
+  - `-r, --rating` -> choose from `general` and `adult` for the rating of the story; defaults to `adult`
   - `-s, --post-script` -> boolean flag to look for a post-script file and add to end of description
 
 The post-script must be a text file in the working directory named `post-script.txt`. It may have markdown formatting. The contents of this file is added to the description of every submission with a line break between it and the supplied description. This is to allow repetitive elements, such as Patreon reminders, 'thank-yous', or other footnotes to be added automatically without it having to be re-entered for every description.

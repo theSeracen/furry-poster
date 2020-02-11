@@ -1,19 +1,20 @@
 """Contains abstract Website class for creating proper website interfaces to a real website, with errors for module/website related issues"""
 
 from abc import ABC, abstractmethod
-from typing import TextIO, BinaryIO
+from typing import TextIO, BinaryIO, Dict
 
 class WebsiteError(Exception): pass
 
 class AuthenticationError(WebsiteError):pass
 
 class Website(ABC):
-	def __init__(self, name: str, preferredFormat: str = 'markdown'):
+	def __init__(self, name: str, ratings: Dict[str, int], preferredFormat: str = 'markdown'):
 		self.name = name
 		self.preferredFormat = preferredFormat
+		self.ratings = ratings
 
 	@abstractmethod
-	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, rating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via website mechanisms"""
 		pass
 
