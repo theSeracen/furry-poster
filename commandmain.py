@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post st
 def initParser():
 	parser.add_argument('directory', metavar='D')
 	parser.add_argument('-i','--ignore-errors', action='store_true', help='Ignore all errors and continue with other sites')
-	parser.add_argument('-f', '--format', choices =['html','markdown','txt', 'bbcode'], default='markdown', help='Format of the source story file. Default is markdown')
+	parser.add_argument('-f', '--format', choices =['html','markdown','text', 'bbcode'], default='markdown', help='Format of the source story file. Default is markdown')
 
 	#site flags
 	parser.add_argument('-F','--furaffinity', action='store_true', help="Flag for whether FurAffinity should be tried")
@@ -129,7 +129,7 @@ def main():
 	#determine file type to look for
 	storyLoc = None
 	args.format = args.format.lower()
-	if args.format == 'txt' or args.format == 'bbcode':
+	if args.format == 'text' or args.format == 'bbcode':
 		ends = ['.txt']
 	elif args.format == 'markdown':
 		ends = ['.mmd','.md']
@@ -170,7 +170,7 @@ def main():
 				args.description = markdownformatter.parseStringBBcode(args.description)
 
 			#handle the story files
-			if site.preferredFormat == args.format or args.format == 'txt':
+			if site.preferredFormat == args.format or args.format == 'text':
 				story = open(storyLoc, 'r',encoding='utf-8')
 			else:
 				loadedStory = ''.join(open(storyLoc, 'r',encoding='utf-8').readlines())
