@@ -9,12 +9,12 @@ def parseStringBBcode(line: str) -> str:
 	toreturn = ''
 	if line.text != '': 
 		for child in line.children:
+			text = child.text
 			if 'italic' in child.attrs['style']:
-				toreturn = toreturn + '[I]' + child.text + '[/I]'
-			elif 'bold' in child.attrs['style']:
-				toreturn = toreturn + '[B]' + child.text + '[/B]'
-			else:
-				toreturn = toreturn + child.text
+				text = '[I]' + text + '[/I]'
+			if 'font-weight' in child.attrs['style']:
+				text = '[B]' + text + '[/B]'
+			toreturn = toreturn + text
 	return toreturn
 
 def parseStringMarkdown(line: str) -> str:
@@ -22,12 +22,12 @@ def parseStringMarkdown(line: str) -> str:
 	toreturn = ''
 	if line.text != '': 
 		for child in line.children:
+			text = child.text
 			if 'italic' in child.attrs['style']:
-				toreturn = toreturn + '*' + child.text + '*'
-			elif 'bold' in child.attrs['style']:
-				toreturn = toreturn + '**' + child.text + '**'
-			else:
-				toreturn = toreturn + child.text
+				text = '*' + text + '*'
+			if 'font-weight' in child.attrs['style']:
+				text = '**' + text + '**'
+			toreturn = toreturn + text
 	return toreturn
 
 def findFiles(directory: str, finalFormat: str):
@@ -70,6 +70,6 @@ def formatFileMarkdown(htmlfile: str):
 	
 if __name__ == '__main__':
 	directory = input('Please enter a directory: ')
-	findFiles(directory)
+	findFiles(directory, 'markdown')
 	print('Conversion Complete')
 	input()
