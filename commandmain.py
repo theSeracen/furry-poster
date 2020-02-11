@@ -30,82 +30,58 @@ def initParser():
 
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
+
+def site_upload(cj_path: str, site, human_name: str ) -> Optional[Website]:
+	loaded = False
+	if cj_path is not None:
+		cj = http.cookiejar.MozillaCookieJar(cj_path)
+		cj.load()
+		site.load(cj)
+		loaded = True
+	
+	if loaded is True:
+		if args.ignore_errors is False:
+			raise AuthenticationError(human_name, 'cannot find a cookies file')
+		else:
+			print(human_name, 'cannot find cookies; the site will be skipped')
+	else:
+		try:
+			site.testAuthentication()
+		except AuthenticationError as e:
+			if args.ignore_errors is True:
+				print(human_name, 'authentication failed!\nContinuing...')
+			else:
+				raise
+		else:
+			return site
+			print(human_name, 'successfully authenticated')
+	
+	return None
+
+
 def main():
 	initParser()
 	args = parser.parse_args()
 	sites = []
 	if args.furaffinity:
-		fa = None
 		for file in os.listdir(os.getcwd()):
-			if re.match("^(furaffinity|fa)?(cookies?)?\.txt", file):
-				cj = http.cookiejar.MozillaCookieJar(file)
-				cj.load()
-				fa = furaffinity.FurAffinity(cj)
+			if re.match("^(furaffinity|fa)?(cookies?)?\\.txt", file):
+				sites.append(site_upload(file, furaffinity.FurAffinity(), "FurAffinity"))
 				break
-		if fa is None:
-			if args.ignore_errors is False:
-				raise AuthenticationError('Furaffinity cannot find a cookies file')
-			else:
-				print('FA cannot find cookies; the site will be skipped')
-		else:
-			try:
-				fa.testAuthentication()
-			except AuthenticationError as e:
-				if args.ignore_errors is True:
-					print('FA authentication failed!\nContinuing...')
-				else:
-					raise
-			else:
-				sites.append(fa)
-				print('FurAffinity successfully authenticated')
+				
 	if args.sofurry:
-		sf = None
 		for file in os.listdir(os.getcwd()):
-			if re.match("^(sofurry|sf)?(cookies?)?\.txt", file):
-				cj = http.cookiejar.MozillaCookieJar(file)
-				cj.load()
-				sf = sofurry.SoFurry(cj)
+			if re.match("^(sofurry|sf)?(cookies?)?\\.txt", file):
+				sites.append(site_upload(file, sofurry.SoFurry(), "SoFurry"))
 				break
-		if sf is None:
-			if args.ignore_errors is False:
-				raise AuthenticationError('SoFurry cannot find a cookies file')
-			else:
-				print('SoFurry cannot find cookies; the site will be skipped')
-		else:
-			try:
-				sf.testAuthentication()
-			except AuthenticationError as e:
-				if args.ignore_errors is True:
-					print('SoFurry authentication failed!\nContinuing...')
-				else:
-					raise
-			else:
-				sites.append(sf)
-				print('SoFurry successfully authenticated')
+				
 	if args.weasyl:
-		ws = None
 		for file in os.listdir(os.getcwd()):
 			if re.match("^(weasyl|ws)?(cookies?)?\.txt", file):
-				cj = http.cookiejar.MozillaCookieJar(file)
-				cj.load()
-				ws = weasyl.Weasyl(cj)
+				sites.append(site_upload(file, weasyl.Weasyl(), "Weasyl"))
 				break
-		if ws is None:
-			if args.ignore_errorss is False:
-				raise AuthenticationError('Weasyl cannot find a cookies file')
-			else:
-				print('Weasyl cannot find cookies; the site will be skipped')
-		else:
-			try:
-				ws.testAuthentication()
-			except AuthenticationError as e:
-				if args.ignore_errors is True:
-					print('Weasyl authentication failed!\nContinuing...')
-				else:
-					raise
-			else:
-				sites.append(ws)
-				print('Weasyl successfully authenticated')
+	
+	sites = list(filter(None, sites))
 
 	#now we can go into checking for all the required items
 	if os.path.isdir(args.directory) is False: raise Exception("Valid directory required")
