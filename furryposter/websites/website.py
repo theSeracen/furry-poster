@@ -8,7 +8,7 @@ class WebsiteError(Exception): pass
 class AuthenticationError(WebsiteError):pass
 
 class Website(ABC):
-	def __init__(self, name):
+	def __init__(self, name: str, preferredFormat: str = 'markdown'):
 		self.name = name
 
 	@abstractmethod
@@ -22,6 +22,6 @@ class Website(ABC):
 		pass
 
 	@abstractmethod
-	def validateTags(self, tags: str):
+	def validateTags(self, tags: str) -> str:
 		"""Convert the given tag string to a form that is valid on the site"""
 		pass

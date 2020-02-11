@@ -10,7 +10,7 @@ from typing import TextIO, BinaryIO
 class FurAffinity(Website):
 	"""Class for a FurAffinity object"""
 	def __init__(self, cookies):
-		Website.__init__(self, 'furaffinity')
+		Website.__init__(self, 'furaffinity', 'bbcode')
 		self.cookie = cookies
 
 	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
