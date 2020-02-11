@@ -8,19 +8,19 @@ def parseStringMarkdown(line: str) -> str:
 		line = formatfunc(line)
 	return line
 
-def italicsBBcodetoMarkdown(line: str) -> str:
+def __italicsBBcodetoMarkdown(line: str) -> str:
 	tags = ['[I]','[i]','[/I]','[/i]']
 	for tag in tags:
 		line = line.replace(tag, '*')
 	return line
 
-def boldBBcodetoMarkdown(line: str) -> str:
+def __boldBBcodetoMarkdown(line: str) -> str:
 	tags = ['[B]','[b]','[/B]','[/b]']
 	for tag in tags:
 		line = line.replace(tag, '**')
 	return line
 
-def linksBBBcodetoMarkdown(line: str) -> str:
+def __linksBBBcodetoMarkdown(line: str) -> str:
 	simplePattern = r'\[URL\](.*?)\[/URL\]'
 	complexPattern = r'\[URL=(.*?)\](.*?)\[/URL\]'
 	subs = []

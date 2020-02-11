@@ -17,7 +17,7 @@ def parseStringBBcode(line: str) -> str:
 		line = formatFunc(line)
 	return line
 
-def linkMarkdowntoBBcode(line: str) -> str:
+def __linkMarkdowntoBBcode(line: str) -> str:
 	simple = r'\[(.*?)\]\(((http|www)?.*?)\)'
 	complex = r'<(.*?)>'
 	subs = []
@@ -36,7 +36,7 @@ def linkMarkdowntoBBcode(line: str) -> str:
 		line = line.replace(old,new)
 	return line
 
-def boldMarkdowntoBBcode(line: str) -> str:
+def __boldMarkdowntoBBcode(line: str) -> str:
 	"""Takes a string and returns a single BBcode string with bold formatting"""
 	#explode into bold parts
 	boldParts = re.split(r'(\*{2,2}.+?\*{2,2})', line)
@@ -45,14 +45,14 @@ def boldMarkdowntoBBcode(line: str) -> str:
 		if boldParts[part - 1].endswith('**'): boldParts[part - 1] = boldParts[part - 1].rstrip('**') + '[/B]'
 	return ''.join(boldParts)
 
-def strongMarkdowntoBBcode(line: str) -> str:
+def __strongMarkdowntoBBcode(line: str) -> str:
 	strongParts = re.split(r'(\*{3,3}.+?\*{3,3})', line)
 	for part in range(len(strongParts)):
 		if strongParts[part - 1].startswith('***'): strongParts[part - 1] = '[B][I]' + strongParts[part - 1].lstrip('***')
 		if strongParts[part - 1].endswith('***'): strongParts[part - 1] = strongParts[part - 1].rstrip('***') + '[/I][/B]'
 	return ''.join(strongParts)
 
-def italicMarkdowntoBBcode(line: str) -> str:
+def __italicMarkdowntoBBcode(line: str) -> str:
 	italicParts = re.split(r'(\*{1,1}.+?\*{1,1})', line)
 	for part in range(len(italicParts)):
 		if italicParts[part - 1].startswith('*'): italicParts[part - 1] = '[I]' + italicParts[part - 1].lstrip('*')
