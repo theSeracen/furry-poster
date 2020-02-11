@@ -12,7 +12,7 @@ def findFiles(directory: str):
 
 def parseStringBBcode(line: str) -> str:
 	"""Takes a string of markdown formatting and converts it to BBcode"""
-	formattingFunctions = [linkMarkdowntoBBcode, strongMarkdowntoBBcode, boldMarkdowntoBBcode, italicMarkdowntoBBcode]
+	formattingFunctions = [__linkMarkdowntoBBcode, __strongMarkdowntoBBcode, __boldMarkdowntoBBcode, __italicMarkdowntoBBcode]
 	for formatFunc in formattingFunctions:
 		line = formatFunc(line)
 	return line
