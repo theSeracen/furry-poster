@@ -3,6 +3,7 @@ Module for converting HTML story files to markdown-formatted text as used on FA 
 """
 import bs4
 import os
+from typing import TextIO, List
 
 def parseStringBBcode(line: str) -> str:
 	"""Parse HTML tags to add BBcode tags to text"""
@@ -38,35 +39,31 @@ def findFiles(directory: str, finalFormat: str):
 	
 	for htmlpage in htmls:
 		if finalFormat == 'bbbcode':
-			formatFileBBcode(htmlpage)
+			formatted = formatFileBBcode(htmlpage)
 		elif finalFormat == 'markdown':
-			formatFileMarkdown(htmlpage)
+			formatted = formatFileMarkdown(htmlpage)
+		with open(htmlpage.split('.')[0] + 'formatted.txt','w',encoding='UTF-8') as storyfile:
+			for part in formatted:
+				storyfile.write(part)
 
-def formatFileBBcode(htmlfile: str):
+def formatFileBBcode(htmlfile: TextIO) -> List[str]:
 	"""Format a specified HTML file"""
-	with open(htmlfile, 'r', encoding='utf-8') as file:
-		page = bs4.BeautifulSoup(file, 'html.parser')
-		paragraphs = page.findAll('p')
+	page = bs4.BeautifulSoup(htmlfile, 'html.parser')
+	paragraphs = page.findAll('p')
 
-		#build list of formatted strings, centring if necessary
-		story = [("[center]" + parseStringBBcode(paragraph) + "[/center]" + '\n\n') if ('align' in paragraph.attrs) else (parseStringBBcode(paragraph) + '\n\n') for paragraph in paragraphs]
+	#build list of formatted strings, centring if necessary
+	story = [("[center]" + parseStringBBcode(paragraph) + "[/center]" + '\n\n') if ('align' in paragraph.attrs) else (parseStringBBcode(paragraph) + '\n\n') for paragraph in paragraphs]
 
-	with open(htmlfile.split('.')[0] + 'formatted.txt','w',encoding='UTF-8') as storyfile:
-		for part in story:
-			storyfile.write(part)
+	return story
 
-def formatFileMarkdown(htmlfile: str):
+def formatFileMarkdown(htmlfile: TextIO) -> List[str]:
 	"""Format a specified HTML file"""
-	with open(htmlfile, 'r', encoding='utf-8') as file:
-		page = bs4.BeautifulSoup(file, 'html.parser')
-		paragraphs = page.findAll('p')
+	page = bs4.BeautifulSoup(htmlfile, 'html.parser')
+	paragraphs = page.findAll('p')
 
-		#build list of formatted strings, centring if necessary
-		story = [("[center]" + parseStringMarkdown(paragraph) + "[/center]" + '\n\n') if ('align' in paragraph.attrs) else (parseStringMarkdown(paragraph) + '\n\n') for paragraph in paragraphs]
-
-	with open(htmlfile.split('.')[0] + 'formatted.md','w',encoding='UTF-8') as storyfile:
-		for part in story:
-			storyfile.write(part)
+	#build list of formatted strings, centring if necessary
+	story = [("[center]" + parseStringMarkdown(paragraph) + "[/center]" + '\n\n') if ('align' in paragraph.attrs) else (parseStringMarkdown(paragraph) + '\n\n') for paragraph in paragraphs]
+	return story
 	
 if __name__ == '__main__':
 	directory = input('Please enter a directory: ')
