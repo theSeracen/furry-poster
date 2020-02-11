@@ -1,16 +1,19 @@
 import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError
-from furryposter.utilities import htmlformatter, markdownformatter
+from furryposter.utilities import htmlformatter, markdownformatter, bbcodeformatter
 import os
 import re
 import http.cookiejar
+from bs4 import BeautifulSoup
+from io import StringIO
 
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
 
 def initParser():
 	parser.add_argument('directory', metavar='D')
 	parser.add_argument('-i','--ignore-errors', action='store_true', help='Ignore all errors and continue with other sites')
+	parser.add_argument('-f', '--format', choices =['html','markdown','txt', 'bbcode'], default='markdown', help='Format of the source story file. Default is markdown')
 
 	#site flags
 	parser.add_argument('-F','--furaffinity', action='store_true', help="Flag for whether FurAffinity should be tried")
@@ -22,8 +25,6 @@ def initParser():
 	parser.add_argument('-d','--description', help="String for the description of the story")
 	parser.add_argument('-k','--tags', help="List of CSV for the story tags")
 	parser.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
-	parser.add_argument('-c', '--convert', action='store_true',help='Flag for whether a HTML file should be directed')
-	parser.add_argument('-f','--format', choices =['html','markdown'], default='markdown', help='Option to choose the source story file format. Default is markdown')
 	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 
 def main():
@@ -124,22 +125,24 @@ def main():
 				print('Post-script file cannot be loaded!\nContinuing...')
 			else:
 				raise Exception('Post-script file cannot be found')
-
-	if args.convert:
-		print('Story conversion commencing...')
-		if args.format.lower() == 'html': htmlformatter.findFiles(args.directory)
-		if args.format.lower() == 'markdown': markdownformatter.findFiles(args.directory)
 	
-	#prioritise formatted stories
+	#determine file type to look for
 	storyLoc = None
-	ends = ['formatted.txt','.txt']
+	args.format = args.format.lower()
+	if args.format == 'txt' or args.format == 'bbcode':
+		ends = ['.txt']
+	elif args.format == 'markdown':
+		ends = ['.mmd','.md']
+	elif args.format == 'html':
+		ends = ['.html']
+
 	for file, ending in ((file, ending) for ending in ends for file in os.listdir(args.directory)):
 		if file.endswith(ending): 
 			storyLoc = args.directory + '\\' + file
 			print('File found: {}'.format(storyLoc))
 			break
 
-	if storyLoc is None: raise Exception('No story file found!')
+	if storyLoc is None: raise Exception('No story file of format {} found!'.format(args.format))
 
 	#get thumbnail
 	thumbnailLoc = None
@@ -161,8 +164,41 @@ def main():
 			if thumbnailLoc is None: thumbnailPass = None
 			else: thumbnailPass = open(thumbnailLoc, 'rb')
 
+			#convert the description if necessary
+			if site.preferredFormat == 'bbcode':
+				print('Converting description to bbcode...')
+				args.description = markdownformatter.parseStringBBcode(args.description)
+
+			#handle the story files
+			if site.preferredFormat == args.format or args.format == 'txt':
+				story = open(storyLoc, 'r',encoding='utf-8')
+			else:
+				loadedStory = ''.join(open(storyLoc, 'r',encoding='utf-8').readlines())
+				#determine the type and convert
+				if args.format == 'bbcode':
+					if site.preferredFormat == 'markdown':
+						print('Converting story to markdown...')
+						story = StringIO(bbcodeformatter.parseStringMarkdown(loadedStory))
+					else:
+						raise Exception('Cannot convert BBcode to the format {}'.format(site.preferredFormat))
+				elif args.format == 'markdown':
+					if site.preferredFormat == 'bbcode':
+						print('Converting story to bbcode...')
+						story = StringIO(markdownformatter.parseStringBBcode(loadedStory))
+					else:
+						raise Exception('Cannot convert markdown to the format'.format(site.preferredFormat))
+				elif args.format == 'html':
+					if site.preferredFormat == 'bbcode':
+						print('Converting story to bbcode...')
+						story = StringIO(''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory))))
+					elif site.preferredFormat == 'markdown':
+						print('Converting story to markdown...')
+						story = StringIO(''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory))))
+					else:
+						raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
+
 			print('Beginning {} submission'.format(site.name))
-			site.submitStory(args.title, args.description, args.tags, open(storyLoc, 'r',encoding='utf-8'), thumbnailPass)
+			site.submitStory(args.title, args.description, args.tags, story, thumbnailPass)
 			print('{} submission completed successfully'.format(site.name))
 		except WebsiteError as e:
 			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
