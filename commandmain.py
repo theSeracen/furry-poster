@@ -27,6 +27,8 @@ def initParser():
 	parser.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 
+	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
+
 def main():
 	initParser()
 	args = parser.parse_args()
@@ -198,7 +200,8 @@ def main():
 						raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
 
 			print('Beginning {} submission'.format(site.name))
-			site.submitStory(args.title, args.description, args.tags, story, thumbnailPass)
+			if args.test: site.submitStory(args.title, args.description, args.tags, story, thumbnailPass)
+			else: print('test: {} bypassed'.format(site.name))
 			print('{} submission completed successfully'.format(site.name))
 		except WebsiteError as e:
 			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))

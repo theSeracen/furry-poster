@@ -34,6 +34,10 @@ Flags in the following section are optional. Note that if flags for title, descr
 
 The post-script must be a text file in the working directory named `post-script.txt`. It may have markdown formatting. The contents of this file is added to the description of every submission with a line break between it and the supplied description. This is to allow repetitive elements, such as Patreon reminders, 'thank-yous', or other footnotes to be added automatically without it having to be re-entered for every description.
 
+The following tags are meant to provide additional information, or have testing purposes:
+
+- `--test` -> including this tag will have the program run normally, but no submissions will be made
+
 ## File Conversion
 The program will automatically convert the selected file in memory to a format that is compatible with each website. This is markdown for SoFurry and Weasyl, and BBcode for FurAffinity. This means that the source directory doesn't need to be cluttered with unnecessary files. 
 
