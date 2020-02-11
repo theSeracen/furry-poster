@@ -10,6 +10,7 @@ class AuthenticationError(WebsiteError):pass
 class Website(ABC):
 	def __init__(self, name: str, preferredFormat: str = 'markdown'):
 		self.name = name
+		self.preferredFormat = preferredFormat
 
 	@abstractmethod
 	def submitStory(self, title: str, description: str, tags: str, story: TextIO, thumbnail):
