@@ -44,6 +44,15 @@ The program will automatically convert the selected file in memory to a format t
 
 Note that the HTML conversion is particularly sensitive. Complex HTML files may not be parsed correctly due to the wide variation of possible tags and configurations. It is best to set the source file as a `.txt` file with BBcode or markdown formatting, or use markdown natively in `.mmd` or `.md` files. The only HTML files that can be said to work correctly with 100% surety are those produced by the Scrivener writing program.
 
+## Example
+For this example, consider a story that is to be uploaded to all supported sites: FurAffinity, SoFurry, and Weasyl. This adds the flags `-FSW`. Additionally, consider that there is a post-script and a thumbnail in the target directory, and that there is a markdown story file: this adds `-spf markdown`. Finally, this is a general story, so `-r general` is added.
+
+If all of the requisite fields for this example story are specified in the command-line, on a linux machine, then the full command would be similar to the following:
+
+`commandmain.py -FSW -spf markdown -r general -t "Example Title" -d "The example description, with *optional* markdown" -k "Example tag, tag two"`
+
+When this is run, a story named 'Example Title' will be uploaded to Furaffinity, SoFurry, and Weasyl, with a general rating and a thumbbnail, and a description that includes a postscript.
+
 ## Cookies
 The program requires authentication for the various websites and this is done via logging in in FireFox and then exporting the cookies in a text file. This text file must be included in the working directory of the program. These files must have specific names to be recognised by the program, namely:
 
