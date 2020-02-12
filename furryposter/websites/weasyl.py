@@ -4,20 +4,20 @@ import requests
 import bs4
 import http.cookiejar
 import re
+from typing import TextIO, BinaryIO
 
 class Weasyl(Website):
-	def __init__(self, cookies):
-		Website.__init__(self, 'weasyl')
-		self.cookie = cookies
+	def __init__(self):
+		Website.__init__(self, 'weasyl', {'general':10, 'adult':40})
 
-	def validateTags(self,tags):
+	def validateTags(self,tags: str) -> str:
 		return tags.replace(', ',' ')
 
 	def testAuthentication(self):
 		page = requests.get('https://www.weasyl.com/messages/notifications', cookies=self.cookie)
 		if 'You must be signed in to perform this operation.' in page.text: raise AuthenticationError('Weasyl authentication failed')
 	
-	def submitStory(self, title, description, tags, story, thumbnail):
+	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		
 		s = requests.Session()
 		s.cookies = self.cookie
@@ -29,7 +29,7 @@ class Weasyl(Website):
 		if thumbnail is not None: uploadFiles = {'submitfile':story, 'coverfile':thumbnail}
 		else: uploadFiles = {'submitfile':story, 'coverfile': ''.encode('utf-8')}
 
-		params = {'token':token,'title':title, 'subtype':2010, 'rating':40,'content':description, 'tags':tags}
+		params = {'token':token,'title':title, 'subtype':2010, 'rating':self.ratings[passedRating],'content':description, 'tags':tags}
 
 		page = s.post('https://www.weasyl.com/submit/literary', data=params, files=uploadFiles)
 
@@ -45,21 +45,6 @@ class Weasyl(Website):
 
 if __name__ == '__main__':
 	cj = http.cookiejar.MozillaCookieJar('weasylcookies.txt')
-	cj.load()
-	ws = Weasyl(cj)
-	ws.testAuthentication()
+	site = Weasyl()
+	site.testSite(cj)
 	
-	title = input("Enter title: ")
-	description = input("Enter description: ")
-	tags = input("Enter tags: ")
-	directory = input("Enter directory: ")
-
-	import os
-	for file in os.listdir(directory):
-		if file.endswith('.txt'): story = directory + '\\' + file
-		if file.endswith('.png'): thumbnail = directory + '\\' + file
-	print(story)
-	print(thumbnail)
-	input('Press enter to confirm...')
-
-	ws.submitStory(title, description, tags, open(story, 'r', encoding='utf-8'), None)
