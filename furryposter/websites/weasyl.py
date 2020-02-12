@@ -9,9 +9,6 @@ from typing import TextIO, BinaryIO
 class Weasyl(Website):
 	def __init__(self):
 		Website.__init__(self, 'weasyl', {'general':10, 'adult':40})
-		
-	def load(self, cookies):
-		self.cookie = cookies
 
 	def validateTags(self,tags: str) -> str:
 		return tags.replace(', ',' ')

@@ -13,6 +13,9 @@ class Website(ABC):
 		self.preferredFormat = preferredFormat
 		self.ratings = ratings
 
+	def load(self, cookies):
+		self.cookie = cookies
+
 	@abstractmethod
 	def submitStory(self, title: str, description: str, tags: str, rating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via website mechanisms"""

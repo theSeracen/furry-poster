@@ -10,9 +10,6 @@ from typing import TextIO, BinaryIO
 class SoFurry(Website):
 	def __init__(self):
 		Website.__init__(self, 'sofurry', {'general':0, 'adult':1})
-		
-	def load(self, cookies):
-		self.cookie = cookies
 
 	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
