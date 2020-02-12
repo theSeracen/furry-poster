@@ -29,13 +29,11 @@ def addText(title: str, tags: List[str], base: Image) -> Image:
 	drawer.multiline_text(titleStart, title, titleColour, font, align='center')
 	titlewidth, titleheight = font.getsize_multiline(title)
 
-	
-	
 	starty = titleheight + int(configs.getint('titleTagSepDist'))
-	tags = '\n'.join(tags.split(', '))
 	tagsize = 5
+	tags = '\n'.join(tags)
 	font = ImageFont.truetype('arial.ttf', tagsize)
-	while font.getsize_multiline(tags)[1] <= (500-starty-configs.getint('tagBottomBorder')):
+	while font.getsize_multiline(tags)[1] <= (500 - starty - configs.getint('tagBottomBorder')):
 		if (tagsize == titlesize - configs.getint('titleTagMinSizeDiff')) or (font.getsize_multiline(tags)[0] >= (base.width * 0.9)):
 			break
 		tagsize += 1
@@ -58,6 +56,9 @@ def makeThumbnail(title: str, tags: List[str], configSection: str = 'DEFAULT') -
 		print('No valid config found under {}'.format(configSection))
 		raise
 
+	if len(tags) > configs.getint('maxTags'):
+		tags = tags[:configs.getint('maxTags')]
+
 	thumbnail = createBase()
 	thumbnail = addText(title, tags, thumbnail)
 	thumbfile = BytesIO()
@@ -66,8 +67,9 @@ def makeThumbnail(title: str, tags: List[str], configSection: str = 'DEFAULT') -
 
 if __name__ == '__main__':
 	title = input('Enter title: ')
+	title = title.replace('\\n', '\n')
 	tags = input('Enter tags as CSV: ')
 	destination = input('Enter target directory: ')
-	thumbfile = makeThumbnail(title, tags)
+	thumbfile = makeThumbnail(title, tags.split(', '))
 	with open(destination + '\\' + 'thumbnail.png', 'wb') as file:
 		file.write(thumbfile.getbuffer())
