@@ -130,6 +130,10 @@ def main():
 		print('Creating thumbnail...')
 		try:
 			thumbnailPass = thumbnailgeneration.makeThumbnail(args.title, splitTags, args.generate_thumbnail)
+			if args.messy:
+				print('Saving thumbnail to file...')
+				with open(args.directory + '\\thumbnail.png', 'wb') as file:
+					file.write(thumbnailPass.getbuffer())
 		except thumbnailerrors.ThumbnailSizingError:
 			if args.ignore_errors:
 				print('Thumbnail generation has failed!')
@@ -169,21 +173,33 @@ def main():
 				if site.preferredFormat == 'markdown':
 					print('Converting story to markdown...')
 					story = StringIO(bbcodeformatter.parseStringMarkdown(loadedStory))
+					if args.messy:
+						with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w') as file:
+							file.write(story.getvalue())
 				else:
 					raise Exception('Cannot convert BBcode to the format {}'.format(site.preferredFormat))
 			elif args.format == 'markdown':
 				if site.preferredFormat == 'bbcode':
 					print('Converting story to bbcode...')
 					story = StringIO(markdownformatter.parseStringBBcode(loadedStory))
+					if args.messy:
+						with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w') as file:
+							file.write(story.getvalue())
 				else:
 					raise Exception('Cannot convert markdown to the format'.format(site.preferredFormat))
 			elif args.format == 'html':
 				if site.preferredFormat == 'bbcode':
 					print('Converting story to bbcode...')
 					story = StringIO(''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory))))
+					if args.messy:
+						with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w') as file:
+							file.write(story.getvalue())
 				elif site.preferredFormat == 'markdown':
 					print('Converting story to markdown...')
 					story = StringIO(''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory))))
+					if args.messy:
+						with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w') as file:
+							file.write(story.getvalue())
 				else:
 					raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
 
