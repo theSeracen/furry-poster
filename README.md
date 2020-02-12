@@ -33,7 +33,7 @@ Flags in the following section are optional. Note that if flags for title, descr
   - `-r, --rating` -> choose from `general` and `adult` for the rating of the story; defaults to `adult`
   - `-s, --post-script` -> boolean flag to look for a post-script file and add to end of description
 
-The post-script must be a text file in the working directory named `post-script.txt`. It may have markdown formatting. The contents of this file is added to the description of every submission with a line break between it and the supplied description. This is to allow repetitive elements, such as Patreon reminders, 'thank-yous', or other footnotes to be added automatically without it having to be re-entered for every description.
+The post-script must be a text file in the working directory named `post-script.txt`. It may have markdown formatting. The contents of this file is added to the description of every submission with a line break between it and the supplied description. This is to allow repetitive elements, such as Patreon reminders, 'thank-you's, or other footnotes to be added automatically without it having to be re-entered for every description.
 
 The following tags are meant to provide additional information, or have testing purposes:
 
@@ -47,14 +47,14 @@ Note that the HTML conversion is particularly sensitive. Complex HTML files may 
 ## Example
 For this example, consider a story that is to be uploaded to all supported sites: FurAffinity, SoFurry, and Weasyl. This adds the flags `-FSW`. Additionally, consider that there is a post-script and a thumbnail in the target directory, and that there is a markdown story file: this adds `-spf markdown`. Finally, this is a general story, so `-r general` is added.
 
-If all of the requisite fields for this example story are specified in the command-line, on a linux machine, then the full command would be similar to the following:
+If all of the requisite fields for this example story are specified in the command-line, on a Linux machine, then the full command would be similar to the following:
 
 `commandmain.py -FSW -spf markdown -r general -t "Example Title" -d "The example description, with *optional* markdown" -k "Example tag, tag two"`
 
-When this is run, a story named 'Example Title' will be uploaded to Furaffinity, SoFurry, and Weasyl, with a general rating and a thumbbnail, and a description that includes a postscript.
+When this is run, a story named 'Example Title' will be uploaded to FurAffinity, SoFurry, and Weasyl, with a general rating and a thumbnail, and a description that includes a postscript.
 
 ## Cookies
-The program requires authentication for the various websites and this is done via logging in in FireFox and then exporting the cookies in a text file. This text file must be included in the working directory of the program. These files must have specific names to be recognised by the program, namely:
+The program requires authentication for the various websites and this is done via logging in via FireFox and then exporting the cookies in a text file. This text file must be included in the working directory of the program. These files must have specific names to be recognised by the program, namely:
 
   - `cookies.txt'` for a master file and if present, must contain all the cookies for authentication to proceed
   - `furaffinitycookies.txt, facookies.txt, fa.txt` for cookies for FurAffinity
