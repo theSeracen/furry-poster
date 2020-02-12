@@ -2,6 +2,7 @@ import configparser
 from PIL import Image, ImageDraw, ImageFont
 from typing import List, Tuple
 from io import BytesIO
+from furryposter.utilities.thumbnailgen.thumbnailerrors import *
 
 configs = None
 
@@ -36,7 +37,7 @@ def __findOptimalTitle(title: str) -> Tuple[str, int]:
 	while titleSize < configs.getint('minTitleSize'):
 		text = title.split(' ')
 		if abs(titleCut) >= len(text):
-			raise Exception('Cannot find best title size')
+			raise ThumbnailSizingError('Cannot find best title size')
 		text = ' '.join(text[:titleCut]) + '\n' + ' '.join(text[titleCut:]).replace('\n', ' ')
 
 		titleSize = __determineOptimalTextSize(text, (configs.getint('width') - titleStart[0]), False)
