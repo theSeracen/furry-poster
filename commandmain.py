@@ -31,20 +31,23 @@ def initParser():
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
 
-def siteUpload(cj_path: str, site: Website, ignore_errors: bool ) -> Optional[Website]:
-	loaded = False
-	if cj_path is not None:
-		cj = http.cookiejar.MozillaCookieJar(cj_path)
-		cj.load()
-		site.load(cj)
-		loaded = True
-	
-	if loaded is False:
+def initSite(regexString: str, site: Website, ignore_errors: bool ) -> Optional[Website]:
+	"""Initialise site with cookies"""
+
+	cookiesLoc = None
+	for file in os.listdir(os.getcwd()):
+		if re.match(regexString, file):
+			cookiesLoc = file
+			break
+	if cookiesLoc is None:
 		if ignore_errors is False:
 			raise AuthenticationError('{} cannot find a cookies file'.format(site.name))
 		else:
 			print('{} cannot find cookies; the site will be skipped'.format(site.name))
 	else:
+		cj = http.cookiejar.MozillaCookieJar(cookiesLoc)
+		cj.load()
+		site.load(cj)
 		try:
 			site.testAuthentication()
 		except AuthenticationError as e:
@@ -55,33 +58,24 @@ def siteUpload(cj_path: str, site: Website, ignore_errors: bool ) -> Optional[We
 		else:
 			print('{} successfully authenticated'.format(site.name))
 			return site
-			
 	return None
 
 
 def main():
 	initParser()
 	args = parser.parse_args()
+
 	sites = []
 	if args.furaffinity:
-		for file in os.listdir(os.getcwd()):
-			if re.match(r'^(furaffinity|fa)?(cookies?)?\.txt', file):
-				sites.append(siteUpload(file, furaffinity.FurAffinity(), args.ignore_errors))
-				break
-				
+		sites.append(initSite(r'^(furaffinity|fa)?(cookies?)?\.txt', furaffinity.FurAffinity(), args.ignore_errors))
+
 	if args.sofurry:
-		for file in os.listdir(os.getcwd()):
-			if re.match(r'^(sofurry|sf)?(cookies?)?\.txt', file):
-				sites.append(siteUpload(file, sofurry.SoFurry(), args.ignore_errors))
-				break
-				
+		sites.append(initSite(r'^(sofurry|sf)?(cookies?)?\.txt', sofurry.SoFurry(), args.ignore_errors))
+						
 	if args.weasyl:
-		for file in os.listdir(os.getcwd()):
-			if re.match(r'^(weasyl|ws)?(cookies?)?\.txt', file):
-				sites.append(siteUpload(file, weasyl.Weasyl(), args.ignore_errors))
-				break
+		sites.append(initSite(r'^(weasyl|ws)?(cookies?)?\.txt', weasyl.Weasyl(), args.ignore_errors))
 	
-	sites = list(filter(None, sites))
+	sites = filter(None, sites)
 
 	#now we can go into checking for all the required items
 	if os.path.isdir(args.directory) is False: raise Exception("Valid directory required")
@@ -97,6 +91,7 @@ def main():
 
 	if args.post_script:
 		if os.path.exists('post-script.txt'):
+			print('Post-script found')
 			with open('post-script.txt','r',encoding='utf-8') as post:
 				args.description = args.description + '\n\n' + ''.join(post.readlines())
 		else:
