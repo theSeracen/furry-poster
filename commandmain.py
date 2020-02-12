@@ -12,11 +12,12 @@ from furryposter.utilities.thumbnailgen.thumbnailgeneration import makeThumbnail
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
 
 def initParser():
+	thumbGroup = parser.add_mutually_exclusive_group()
 	parser.add_argument('directory', metavar='D')
 	parser.add_argument('-i','--ignore-errors', action='store_true', help='Ignore all errors and continue with other sites')
 	parser.add_argument('-f', '--format', choices =['html','markdown','text', 'bbcode'], default='markdown', help='Format of the source story file. Default is markdown')
 	parser.add_argument('-m', '--messy', action='store_true', help='Flag to cause all converted files to be written to disk rather than kept in memory')
-	parser.add_argument('-g', '--generate-thumbnail', action='store', default=6, type=int, help='Flag causes a thumbnail to be dynamically generated. The top 6 tags are used unless a number is provided')
+	thumbGroup.add_argument('-g', '--generate-thumbnail', default=False, const='default', nargs='?', help='Flag causes a thumbnail to be dynamically generated. The default profile is used in thumbnail.config unless specified')
 
 	#site flags
 	parser.add_argument('-F','--furaffinity', action='store_true', help="Flag for whether FurAffinity should be tried")
@@ -27,7 +28,7 @@ def initParser():
 	parser.add_argument('-t','--title', help="String for the title of the story")
 	parser.add_argument('-d','--description', help="String for the description of the story")
 	parser.add_argument('-k','--tags', help="List of CSV for the story tags")
-	parser.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
+	thumbGroup.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 	parser.add_argument('-r', '--rating', choices=['general','adult'], default='adult', help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
 
@@ -87,6 +88,8 @@ def main():
 	if args.description is None: args.description = input('Please enter a description: ')
 	if args.tags is None: args.tags = input('Please enter CSV tags: ')
 
+	args.description = args.description.replace('\\n', '\n') #replaces newline from manual input as it doesn't add an escape
+
 	#error checking
 	if args.title == '': raise Exception('No title specified!')
 	if args.description == '': raise Exception('No description specified!')
@@ -124,10 +127,8 @@ def main():
 	#get thumbnail
 	if args.generate_thumbnail:
 		splitTags = args.tags.split(', ')
-		if len(splitTags) > args.generate_thumbnail:
-			splitTags = splitTags[:args.generate_thumbnail-1]
 		print('Creating thumbnail...')
-		thumbnailPass = makeThumbnail(args.title, splitTags)
+		thumbnailPass = makeThumbnail(args.title, splitTags, args.generate_thumbnail)
 	else:
 		thumbnailLoc = None
 		if args.thumbnail:
