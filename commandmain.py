@@ -7,6 +7,7 @@ import re
 import http.cookiejar
 from io import StringIO
 from typing import Optional
+from furryposter.utilities.thumbnailgen.thumbnailgeneration import makeThumbnail
 
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
 
@@ -14,6 +15,8 @@ def initParser():
 	parser.add_argument('directory', metavar='D')
 	parser.add_argument('-i','--ignore-errors', action='store_true', help='Ignore all errors and continue with other sites')
 	parser.add_argument('-f', '--format', choices =['html','markdown','text', 'bbcode'], default='markdown', help='Format of the source story file. Default is markdown')
+	parser.add_argument('-m', '--messy', action='store_true', help='Flag to cause all converted files to be written to disk rather than kept in memory')
+	parser.add_argument('-g', '--generate-thumbnail', action='store', default=6, type=int, help='Flag causes a thumbnail to be dynamically generated. The top 6 tags are used unless a number is provided')
 
 	#site flags
 	parser.add_argument('-F','--furaffinity', action='store_true', help="Flag for whether FurAffinity should be tried")
@@ -31,7 +34,7 @@ def initParser():
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
 
-def initSite(regexString: str, site: Website, ignore_errors: bool ) -> Optional[Website]:
+def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[Website]:
 	"""Initialise site with cookies"""
 
 	cookiesLoc = None
@@ -119,25 +122,31 @@ def main():
 	if storyLoc is None: raise Exception('No story file of format {} found!'.format(args.format))
 
 	#get thumbnail
-	thumbnailLoc = None
-	if args.thumbnail:
-		for file in os.listdir(args.directory):
-			if re.match('.*\\.(png|jpg)', file):
-				thumbnailLoc = args.directory + '\\' + file
-				print('Thumbnail file found')
-				break
-		if thumbnailLoc is None:
-			if args.ignore_errors:
-				print('No thumbnail found!\nContinuing...')
-			else:
-				raise Exception('No thumbnail file found!')
+	if args.generate_thumbnail:
+		splitTags = args.tags.split(', ')
+		if len(splitTags) > args.generate_thumbnail:
+			splitTags = splitTags[:args.generate_thumbnail-1]
+		print('Creating thumbnail...')
+		thumbnailPass = makeThumbnail(args.title, splitTags)
+	else:
+		thumbnailLoc = None
+		if args.thumbnail:
+			for file in os.listdir(args.directory):
+				if re.match('.*\\.(png|jpg)', file):
+					thumbnailLoc = args.directory + '\\' + file
+					print('Thumbnail file found')
+					break
+			if thumbnailLoc is None:
+				if args.ignore_errors:
+					print('No thumbnail found!\nContinuing...')
+				else:
+					raise Exception('No thumbnail file found!')
+		if thumbnailLoc is None: thumbnailPass = None
+		else: thumbnailPass = open(thumbnailLoc, 'rb')
 
 	#submit the files to each website
 	for site in sites:
 		try:
-			if thumbnailLoc is None: thumbnailPass = None
-			else: thumbnailPass = open(thumbnailLoc, 'rb')
-
 			#convert the description if necessary
 			if site.preferredFormat == 'bbcode':
 				print('Converting description to bbcode...')
