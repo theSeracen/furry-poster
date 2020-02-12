@@ -31,7 +31,7 @@ def initParser():
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
 
-def site_upload(cj_path: str, site: Website, ignore_errors: bool ) -> Optional[Website]:
+def siteUpload(cj_path: str, site: Website, ignore_errors: bool ) -> Optional[Website]:
 	loaded = False
 	if cj_path is not None:
 		cj = http.cookiejar.MozillaCookieJar(cj_path)
@@ -39,23 +39,23 @@ def site_upload(cj_path: str, site: Website, ignore_errors: bool ) -> Optional[W
 		site.load(cj)
 		loaded = True
 	
-	if loaded is True:
+	if loaded is False:
 		if ignore_errors is False:
-			raise AuthenticationError(site.name, 'cannot find a cookies file')
+			raise AuthenticationError('{} cannot find a cookies file'.format(site.name))
 		else:
-			print(site.name, 'cannot find cookies; the site will be skipped')
+			print('{} cannot find cookies; the site will be skipped'.format(site.name))
 	else:
 		try:
 			site.testAuthentication()
 		except AuthenticationError as e:
 			if ignore_errors is True:
-				print(site.name, 'authentication failed!\nContinuing...')
+				print('{} authentication failed!\nContinuing...'.format(site.name))
 			else:
 				raise
 		else:
+			print('{} successfully authenticated'.format(site.name))
 			return site
-			print(human_name, 'successfully authenticated')
-	
+			
 	return None
 
 
@@ -65,20 +65,20 @@ def main():
 	sites = []
 	if args.furaffinity:
 		for file in os.listdir(os.getcwd()):
-			if re.match("^(furaffinity|fa)?(cookies?)?\\.txt", file):
-				sites.append(site_upload(file, furaffinity.FurAffinity(), args.ignore_errors))
+			if re.match(r'^(furaffinity|fa)?(cookies?)?\.txt', file):
+				sites.append(siteUpload(file, furaffinity.FurAffinity(), args.ignore_errors))
 				break
 				
 	if args.sofurry:
 		for file in os.listdir(os.getcwd()):
-			if re.match("^(sofurry|sf)?(cookies?)?\\.txt", file):
-				sites.append(site_upload(file, sofurry.SoFurry(), args.ignore_errors))
+			if re.match(r'^(sofurry|sf)?(cookies?)?\.txt', file):
+				sites.append(siteUpload(file, sofurry.SoFurry(), args.ignore_errors))
 				break
 				
 	if args.weasyl:
 		for file in os.listdir(os.getcwd()):
-			if re.match("^(weasyl|ws)?(cookies?)?\\.txt", file):
-				sites.append(site_upload(file, weasyl.Weasyl(), args.ignore_errors))
+			if re.match(r'^(weasyl|ws)?(cookies?)?\.txt', file):
+				sites.append(siteUpload(file, weasyl.Weasyl(), args.ignore_errors))
 				break
 	
 	sites = list(filter(None, sites))
@@ -100,7 +100,7 @@ def main():
 			with open('post-script.txt','r',encoding='utf-8') as post:
 				args.description = args.description + '\n\n' + ''.join(post.readlines())
 		else:
-			if args.ignore_errrors:
+			if args.ignore_errors:
 				print('Post-script file cannot be loaded!\nContinuing...')
 			else:
 				raise Exception('Post-script file cannot be found')
