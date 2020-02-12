@@ -67,6 +67,6 @@ def formatFileMarkdown(htmlfile: TextIO) -> List[str]:
 	
 if __name__ == '__main__':
 	directory = input('Please enter a directory: ')
-	findFiles(directory, 'markdown')
+	mode = input('Enter a destination format (markdown|bbcode): ')
+	findFiles(directory, mode)
 	print('Conversion Complete')
-	input()

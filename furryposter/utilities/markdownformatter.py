@@ -70,5 +70,6 @@ def formatFileBBcode(file: str):
 		textfile.writelines(formatted)
 			
 if __name__ == '__main__':
-	line = input('Enter test string: ')
-	print(parseStringBBcode(line))
+	directory = input('Please enter a directory: ')
+	findFiles(directory)
+	print('Conversion Complete')
