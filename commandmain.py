@@ -7,7 +7,7 @@ import re
 import http.cookiejar
 from io import StringIO
 from typing import Optional
-from furryposter.utilities.thumbnailgen.thumbnailgeneration import makeThumbnail
+from furryposter.utilities.thumbnailgen import thumbnailerrors, thumbnailgeneration
 
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
 
@@ -128,7 +128,14 @@ def main():
 	if args.generate_thumbnail:
 		splitTags = args.tags.split(', ')
 		print('Creating thumbnail...')
-		thumbnailPass = makeThumbnail(args.title, splitTags, args.generate_thumbnail)
+		try:
+			thumbnailPass = thumbnailgeneration.makeThumbnail(args.title, splitTags, args.generate_thumbnail)
+		except thumbnailerrors.ThumbnailSizingError:
+			if args.ignore_errors:
+				print('Thumbnail generation has failed!')
+				thumbnailPass = None
+			else:
+				raise
 	else:
 		thumbnailLoc = None
 		if args.thumbnail:

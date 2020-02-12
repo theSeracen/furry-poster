@@ -33,7 +33,7 @@ def __findOptimalTitle(title: str) -> Tuple[str, int]:
 	titleStart = tuple((int(val) for val in configs.get('titleStartCoords').split(', ')))
 
 	titleSize = __determineOptimalTextSize(title, (configs.getint('width') - titleStart[0]), False)
-
+	text = title
 	while titleSize < configs.getint('minTitleSize'):
 		text = title.split(' ')
 		if abs(titleCut) >= len(text):
@@ -73,7 +73,7 @@ def __addText(title: str, tags: List[str], base: Image) -> Image:
 
 	return base
 
-def makeThumbnail(title: str, tags: List[str], configSection: str='DEFAULT') -> BytesIO:
+def makeThumbnail(title: str, tags: List[str], configSection: str='default') -> BytesIO:
 	parsedOptions = configparser.ConfigParser()
 	parsedOptions.read_file(open(r'.\furryposter\utilities\thumbnailgen\thumbnail.config', 'r', encoding='utf-8'))
 	global configs
