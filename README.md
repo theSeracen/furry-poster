@@ -64,3 +64,8 @@ The program requires authentication for the various websites and this is done vi
 If the `--ignore-errors` flag is not set, a failed authentication on any of the sites will abort the program. Else, an error message will be displayed and the program will continue with the other sites specified in the flags, if any.
 
 An add-in may be necessary to create these files. The following add-on is suitable and creates compatible cookies files, but others exist: [Export Cookies - Firefox Add-On](https://addons.mozilla.org/en-US/firefox/addon/export-cookies-txt/)
+
+## Installation
+To install, clone the repository and then run `setup.py` with `pip install .` in the working directory. Else, you can also install the required packages listed below:
+- `requests`
+- `bs4` (Beautiful Soup 4)
