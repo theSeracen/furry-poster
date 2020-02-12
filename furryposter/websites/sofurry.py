@@ -8,8 +8,10 @@ import re
 from typing import TextIO, BinaryIO
 
 class SoFurry(Website):
-	def __init__(self, cookies):
+	def __init__(self):
 		Website.__init__(self, 'sofurry', {'general':0, 'adult':1})
+		
+	def load(self, cookies):
 		self.cookie = cookies
 
 	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
@@ -45,21 +47,5 @@ class SoFurry(Website):
 
 if __name__ == '__main__':
 	cj = http.cookiejar.MozillaCookieJar('sofurrycookies.txt')
-	cj.load()
-	sf = SoFurry(cj)
-	sf.testAuthentication()
-	
-	title = input("Enter title: ")
-	description = input("Enter description: ")
-	tags = input("Enter tags: ")
-	directory = input("Enter directory: ")
-
-	import os
-	for file in os.listdir(directory):
-		if file.endswith('.txt'): story = directory + '\\' + file
-		if file.endswith('.png'): thumbnail = directory + '\\' + file
-	print(story)
-	print(thumbnail)
-	input('Press enter to confirm...')
-
-	sf.submitStory(title, description, tags, open(story, 'r', encoding='utf-8'), open(thumbnail, 'rb'))
+	site = SoFurry()
+	site.testSite(cj)

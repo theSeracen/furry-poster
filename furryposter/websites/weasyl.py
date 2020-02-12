@@ -7,8 +7,10 @@ import re
 from typing import TextIO, BinaryIO
 
 class Weasyl(Website):
-	def __init__(self, cookies):
+	def __init__(self):
 		Website.__init__(self, 'weasyl', {'general':10, 'adult':40})
+		
+	def load(self, cookies):
 		self.cookie = cookies
 
 	def validateTags(self,tags: str) -> str:
@@ -46,21 +48,6 @@ class Weasyl(Website):
 
 if __name__ == '__main__':
 	cj = http.cookiejar.MozillaCookieJar('weasylcookies.txt')
-	cj.load()
-	ws = Weasyl(cj)
-	ws.testAuthentication()
+	site = Weasyl()
+	site.testSite(cj)
 	
-	title = input("Enter title: ")
-	description = input("Enter description: ")
-	tags = input("Enter tags: ")
-	directory = input("Enter directory: ")
-
-	import os
-	for file in os.listdir(directory):
-		if file.endswith('.txt'): story = directory + '\\' + file
-		if file.endswith('.png'): thumbnail = directory + '\\' + file
-	print(story)
-	print(thumbnail)
-	input('Press enter to confirm...')
-
-	ws.submitStory(title, description, tags, open(story, 'r', encoding='utf-8'), None)
