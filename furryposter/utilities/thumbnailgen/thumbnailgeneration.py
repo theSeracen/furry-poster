@@ -11,7 +11,7 @@ def createBase() -> Image:
 	base = Image.new('RGB', (configs.getint('width'), configs.getint('height')), backcolour)
 	return base
 
-def addText(title: str, tags: List, base: Image) -> Image:
+def addText(title: str, tags: List[str], base: Image) -> Image:
 	"""Add the title and tags to the base image"""
 	#find the best size for the title
 	titlesize = 5
@@ -48,7 +48,7 @@ def addText(title: str, tags: List, base: Image) -> Image:
 	drawer.multiline_text((startx, starty), tags, tagColour, font, align='center')
 	return base
 
-def makeThumbnail(title: str, tags: str, configSection: str = 'DEFAULT') -> BytesIO:
+def makeThumbnail(title: str, tags: List[str], configSection: str = 'DEFAULT') -> BytesIO:
 	parsedOptions = configparser.ConfigParser()
 	parsedOptions.read_file(open(r'.\furryposter\utilities\thumbnailgen\thumbnail.config', 'r', encoding='utf-8'))
 	global configs
