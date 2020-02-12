@@ -146,40 +146,40 @@ def main():
 
 	#submit the files to each website
 	for site in sites:
+		#convert the description if necessary
+		if site.preferredFormat == 'bbcode':
+			print('Converting description to bbcode...')
+			args.description = markdownformatter.parseStringBBcode(args.description)
+
+		#handle the story files
+		if site.preferredFormat == args.format or args.format == 'text':
+			story = open(storyLoc, 'r',encoding='utf-8')
+		else:
+			loadedStory = ''.join(open(storyLoc, 'r',encoding='utf-8').readlines())
+			#determine the type and convert
+			if args.format == 'bbcode':
+				if site.preferredFormat == 'markdown':
+					print('Converting story to markdown...')
+					story = StringIO(bbcodeformatter.parseStringMarkdown(loadedStory))
+				else:
+					raise Exception('Cannot convert BBcode to the format {}'.format(site.preferredFormat))
+			elif args.format == 'markdown':
+				if site.preferredFormat == 'bbcode':
+					print('Converting story to bbcode...')
+					story = StringIO(markdownformatter.parseStringBBcode(loadedStory))
+				else:
+					raise Exception('Cannot convert markdown to the format'.format(site.preferredFormat))
+			elif args.format == 'html':
+				if site.preferredFormat == 'bbcode':
+					print('Converting story to bbcode...')
+					story = StringIO(''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory))))
+				elif site.preferredFormat == 'markdown':
+					print('Converting story to markdown...')
+					story = StringIO(''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory))))
+				else:
+					raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
+
 		try:
-			#convert the description if necessary
-			if site.preferredFormat == 'bbcode':
-				print('Converting description to bbcode...')
-				args.description = markdownformatter.parseStringBBcode(args.description)
-
-			#handle the story files
-			if site.preferredFormat == args.format or args.format == 'text':
-				story = open(storyLoc, 'r',encoding='utf-8')
-			else:
-				loadedStory = ''.join(open(storyLoc, 'r',encoding='utf-8').readlines())
-				#determine the type and convert
-				if args.format == 'bbcode':
-					if site.preferredFormat == 'markdown':
-						print('Converting story to markdown...')
-						story = StringIO(bbcodeformatter.parseStringMarkdown(loadedStory))
-					else:
-						raise Exception('Cannot convert BBcode to the format {}'.format(site.preferredFormat))
-				elif args.format == 'markdown':
-					if site.preferredFormat == 'bbcode':
-						print('Converting story to bbcode...')
-						story = StringIO(markdownformatter.parseStringBBcode(loadedStory))
-					else:
-						raise Exception('Cannot convert markdown to the format'.format(site.preferredFormat))
-				elif args.format == 'html':
-					if site.preferredFormat == 'bbcode':
-						print('Converting story to bbcode...')
-						story = StringIO(''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory))))
-					elif site.preferredFormat == 'markdown':
-						print('Converting story to markdown...')
-						story = StringIO(''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory))))
-					else:
-						raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
-
 			print('Beginning {} submission'.format(site.name))
 			if args.test: print('test: {} bypassed'.format(site.name))
 			else: site.submitStory(args.title, args.description, args.tags, args.rating, story, thumbnailPass)
