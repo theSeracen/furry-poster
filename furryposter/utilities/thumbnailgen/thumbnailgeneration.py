@@ -20,7 +20,7 @@ def __determineOptimalTextSize(text: str, maxSize: int, doingTags: bool) -> int:
 	font = ImageFont.truetype('arial.ttf', textSize)
 	while font.getsize_multiline(text)[sizeIndex] < maxSize:
 		if doingTags:
-			if font.getsize_multiline(text)[0] >= (configs.getint('width') * 0.75): #make sure that it doesn't cover more than 80% of width
+			if font.getsize_multiline(text)[0] >= (configs.getint('width') * 0.75): #make sure that it doesn't cover more than 75% of width
 				break
 		textSize += 1
 		font = ImageFont.truetype("arial.ttf", textSize)
@@ -51,8 +51,17 @@ def __addText(title: str, tags: List[str], base: Image) -> Image:
 	titleStart = tuple((int(val) for val in configs.get('titleStartCoords').split(', ')))
 
 	title, titlesize = __findOptimalTitle(title)
-	
+	print(titlesize)
 	font = ImageFont.truetype("arial.ttf", titlesize)
+
+	#max out the size and then centre if too big
+	if titlesize > configs.getint('maxTitleSize'):
+		titlesize = configs.getint('maxTitleSize')
+		font = ImageFont.truetype("arial.ttf", titlesize)
+		wid, hei = font.getsize_multiline(title)
+		newTitlex = (base.width - wid) / 2
+		titleStart = (newTitlex, titleStart[1])
+
 	titleColour = tuple((int(val) for val in configs.get('titleColour').split(', ')))
 
 	drawer = ImageDraw.Draw(base)
@@ -63,6 +72,10 @@ def __addText(title: str, tags: List[str], base: Image) -> Image:
 	starty = titleheight + int(configs.getint('titleTagSepDist'))
 	tags = '\n'.join(tags)
 	tagsize = __determineOptimalTextSize(tags, (configs.getint('width') - starty - configs.getint('tagBottomBorder')), True)
+	#if the tags are too close in size to the title, reduce
+	if abs(titlesize - tagsize) <= 10:
+		tagsize = titlesize - 11
+
 	font = ImageFont.truetype('arial.ttf', tagsize)
 
 	tagswidth, tagsheight = font.getsize_multiline(tags)
@@ -98,5 +111,5 @@ if __name__ == '__main__':
 	tags = input('Enter tags as CSV: ')
 	destination = input('Enter target directory: ')
 	thumbfile = makeThumbnail(title, tags.split(', '))
-	with open(destination + '\\' + 'thumbnail.png', 'wb') as file:
+	with open(destination + r'\thumbnail.png', 'wb') as file:
 		file.write(thumbfile.getbuffer())
