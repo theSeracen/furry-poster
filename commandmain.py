@@ -32,7 +32,6 @@ def initParser():
 	thumbGroup.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 	parser.add_argument('-r', '--rating', choices=['general','adult'], default='adult', help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
-	parser.add_argument('-c', '--check-source', action='store_true', help='Run formatting checks on the source file')
 
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
