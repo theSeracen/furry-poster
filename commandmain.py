@@ -5,15 +5,19 @@ from furryposter.utilities import htmlformatter, markdownformatter, bbcodeformat
 import os
 import re
 import http.cookiejar
-from io import StringIO
+from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
+from furryposter.utilities.thumbnailgen import thumbnailerrors, thumbnailgeneration
 
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
 
 def initParser():
+	thumbGroup = parser.add_mutually_exclusive_group()
 	parser.add_argument('directory', metavar='D')
 	parser.add_argument('-i','--ignore-errors', action='store_true', help='Ignore all errors and continue with other sites')
 	parser.add_argument('-f', '--format', choices =['html','markdown','text', 'bbcode'], default='markdown', help='Format of the source story file. Default is markdown')
+	parser.add_argument('-m', '--messy', action='store_true', help='Flag to cause all converted files to be written to disk rather than kept in memory')
+	thumbGroup.add_argument('-g', '--generate-thumbnail', default=False, const='default', nargs='?', help='Flag causes a thumbnail to be dynamically generated. The default profile is used in thumbnail.config unless specified')
 
 	#site flags
 	parser.add_argument('-F','--furaffinity', action='store_true', help="Flag for whether FurAffinity should be tried")
@@ -24,14 +28,14 @@ def initParser():
 	parser.add_argument('-t','--title', help="String for the title of the story")
 	parser.add_argument('-d','--description', help="String for the description of the story")
 	parser.add_argument('-k','--tags', help="List of CSV for the story tags")
-	parser.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
+	thumbGroup.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 	parser.add_argument('-r', '--rating', choices=['general','adult'], default='adult', help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
 
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
 
-def initSite(regexString: str, site: Website, ignore_errors: bool ) -> Optional[Website]:
+def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[Website]:
 	"""Initialise site with cookies"""
 
 	cookiesLoc = None
@@ -84,6 +88,8 @@ def main():
 	if args.description is None: args.description = input('Please enter a description: ')
 	if args.tags is None: args.tags = input('Please enter CSV tags: ')
 
+	args.description = args.description.replace('\\n', '\n') #replaces newline from manual input as it doesn't add an escape
+
 	#error checking
 	if args.title == '': raise Exception('No title specified!')
 	if args.description == '': raise Exception('No description specified!')
@@ -119,61 +125,88 @@ def main():
 	if storyLoc is None: raise Exception('No story file of format {} found!'.format(args.format))
 
 	#get thumbnail
-	thumbnailLoc = None
-	if args.thumbnail:
-		for file in os.listdir(args.directory):
-			if re.match('.*\\.(png|jpg)', file):
-				thumbnailLoc = args.directory + '\\' + file
-				print('Thumbnail file found')
-				break
-		if thumbnailLoc is None:
+	if args.generate_thumbnail:
+		splitTags = args.tags.split(', ')
+		print('Creating thumbnail...')
+		try:
+			thumbnailPass = thumbnailgeneration.makeThumbnail(args.title, splitTags, args.generate_thumbnail)
+			if args.messy:
+				print('Saving thumbnail to file...')
+				with open(args.directory + '\\thumbnail.png', 'wb') as file:
+					file.write(thumbnailPass.getvalue())
+		except thumbnailerrors.ThumbnailSizingError:
 			if args.ignore_errors:
-				print('No thumbnail found!\nContinuing...')
+				print('Thumbnail generation has failed!')
+				thumbnailPass = None
 			else:
-				raise Exception('No thumbnail file found!')
+				raise
+	else:
+		thumbnailLoc = None
+		if args.thumbnail:
+			for file in os.listdir(args.directory):
+				if re.match('.*\\.(png|jpg)', file):
+					thumbnailLoc = args.directory + '\\' + file
+					print('Thumbnail file found')
+					break
+			if thumbnailLoc is None:
+				if args.ignore_errors:
+					print('No thumbnail found!\nContinuing...')
+				else:
+					raise Exception('No thumbnail file found!')
+		if thumbnailLoc is None: thumbnailPass = None
+		else: thumbnailPass = open(thumbnailLoc, 'rb')
 
 	#submit the files to each website
 	for site in sites:
+		#convert the description if necessary
+		if site.preferredFormat == 'bbcode':
+			print('Converting description to bbcode...')
+			description = markdownformatter.parseStringBBcode(args.description)
+		else: description = args.description
+		#handle the story files
+		if site.preferredFormat == args.format or args.format == 'text':
+			story = open(storyLoc, 'r',encoding='utf-8')
+		else:
+			loadedStory = ''.join(open(storyLoc, 'r',encoding='utf-8').readlines())
+			#determine the type and convert
+			if args.format == 'bbcode':
+				if site.preferredFormat == 'markdown':
+					print('Converting story to markdown...')
+					story = bbcodeformatter.parseStringMarkdown(loadedStory)
+				else:
+					raise Exception('Cannot convert BBcode to the format {}'.format(site.preferredFormat))
+			elif args.format == 'markdown':
+				if site.preferredFormat == 'bbcode':
+					print('Converting story to bbcode...')
+					story = markdownformatter.parseStringBBcode(loadedStory)
+				else:
+					raise Exception('Cannot convert markdown to the format'.format(site.preferredFormat))
+			elif args.format == 'html':
+				if site.preferredFormat == 'bbcode':
+					print('Converting story to bbcode...')
+					story = ''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory)))
+				elif site.preferredFormat == 'markdown':
+					print('Converting story to markdown...')
+					story = ''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory)))
+				else:
+					raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
+
+			story = StringIO(story)
+			
+			if args.messy:
+				if site.preferredFormat == 'bbcode':
+					with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
+						file.write(story.getvalue())
+				elif site.preferredFormat == 'markdown':
+					with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
+						file.write(story.getvalue())
 		try:
-			if thumbnailLoc is None: thumbnailPass = None
-			else: thumbnailPass = open(thumbnailLoc, 'rb')
-
-			#convert the description if necessary
-			if site.preferredFormat == 'bbcode':
-				print('Converting description to bbcode...')
-				args.description = markdownformatter.parseStringBBcode(args.description)
-
-			#handle the story files
-			if site.preferredFormat == args.format or args.format == 'text':
-				story = open(storyLoc, 'r',encoding='utf-8')
-			else:
-				loadedStory = ''.join(open(storyLoc, 'r',encoding='utf-8').readlines())
-				#determine the type and convert
-				if args.format == 'bbcode':
-					if site.preferredFormat == 'markdown':
-						print('Converting story to markdown...')
-						story = StringIO(bbcodeformatter.parseStringMarkdown(loadedStory))
-					else:
-						raise Exception('Cannot convert BBcode to the format {}'.format(site.preferredFormat))
-				elif args.format == 'markdown':
-					if site.preferredFormat == 'bbcode':
-						print('Converting story to bbcode...')
-						story = StringIO(markdownformatter.parseStringBBcode(loadedStory))
-					else:
-						raise Exception('Cannot convert markdown to the format'.format(site.preferredFormat))
-				elif args.format == 'html':
-					if site.preferredFormat == 'bbcode':
-						print('Converting story to bbcode...')
-						story = StringIO(''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory))))
-					elif site.preferredFormat == 'markdown':
-						print('Converting story to markdown...')
-						story = StringIO(''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory))))
-					else:
-						raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
-
 			print('Beginning {} submission'.format(site.name))
+			#reset virtual file stream if needed
+			thumbnailPass.seek(0)
+			story.seek(0)
 			if args.test: print('test: {} bypassed'.format(site.name))
-			else: site.submitStory(args.title, args.description, args.tags, args.rating, story, thumbnailPass)
+			else: site.submitStory(args.title, description, args.tags, args.rating, story, thumbnailPass)
 			print('{} submission completed successfully'.format(site.name))
 		except WebsiteError as e:
 			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
