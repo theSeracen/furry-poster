@@ -51,7 +51,6 @@ def __addText(title: str, tags: List[str], base: Image) -> Image:
 	titleStart = tuple((int(val) for val in configs.get('titleStartCoords').split(', ')))
 
 	title, titlesize = __findOptimalTitle(title)
-	print(titlesize)
 	font = ImageFont.truetype("arial.ttf", titlesize)
 
 	#max out the size and then centre if too big
