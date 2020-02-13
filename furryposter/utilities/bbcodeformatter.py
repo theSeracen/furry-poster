@@ -3,7 +3,7 @@ import re
 
 def parseStringMarkdown(line: str) -> str:
 	"""Converts a string of BBcode to markdown formatting"""
-	formattingFunctions = [__boldBBcodetoMarkdown, __italicsBBcodetoMarkdown, __linksBBBcodetoMarkdown]
+	formattingFunctions = [__boldBBcodetoMarkdown, __italicsBBcodetoMarkdown, __linksBBBcodetoMarkdown, __doubleNewLines]
 	for formatfunc in formattingFunctions:
 		line = formatfunc(line)
 	return line
@@ -19,6 +19,12 @@ def __boldBBcodetoMarkdown(line: str) -> str:
 	for tag in tags:
 		line = line.replace(tag, '**')
 	return line
+
+def __doubleNewLines(line: str) -> str:
+	"""Doubles the new lines in the document, if there is not already a blank line between each paragraph"""
+	#number 5 is completely abitrary; just need to find if there's more than 5 empty lines
+	if len(re.findall(r'\n\n', line)) >= 5: return line
+	else: return line.replace('\n', '\n\n')
 
 def __linksBBBcodetoMarkdown(line: str) -> str:
 	simplePattern = r'\[URL\](.*?)\[/URL\]'

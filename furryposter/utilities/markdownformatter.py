@@ -12,7 +12,7 @@ def findFiles(directory: str):
 
 def parseStringBBcode(line: str) -> str:
 	"""Takes a string of markdown formatting and converts it to BBcode"""
-	formattingFunctions = [__linkMarkdowntoBBcode, __strongMarkdowntoBBcode, __boldMarkdowntoBBcode, __italicMarkdowntoBBcode]
+	formattingFunctions = [__linkMarkdowntoBBcode, __strongMarkdowntoBBcode, __boldMarkdowntoBBcode, __italicMarkdowntoBBcode, __doubleNewLines]
 	for formatFunc in formattingFunctions:
 		line = formatFunc(line)
 	return line
@@ -35,6 +35,12 @@ def __linkMarkdowntoBBcode(line: str) -> str:
 	for (new, old) in subs:
 		line = line.replace(old,new)
 	return line
+
+def __doubleNewLines(line: str) -> str:
+	"""Doubles the new lines in the document, if there is not already a blank line between each paragraph"""
+	#number 5 is completely abitrary; just need to find if there's more than 5 empty lines
+	if len(re.findall(r'\n\n', line)) >= 5: return line
+	else: return line.replace('\n', '\n\n')
 
 def __boldMarkdowntoBBcode(line: str) -> str:
 	"""Takes a string and returns a single BBcode string with bold formatting"""
