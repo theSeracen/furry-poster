@@ -5,7 +5,7 @@ from furryposter.utilities import htmlformatter, markdownformatter, bbcodeformat
 import os
 import re
 import http.cookiejar
-from io import StringIO
+from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
 from furryposter.utilities.thumbnailgen import thumbnailerrors, thumbnailgeneration
 
@@ -133,7 +133,7 @@ def main():
 			if args.messy:
 				print('Saving thumbnail to file...')
 				with open(args.directory + '\\thumbnail.png', 'wb') as file:
-					file.write(thumbnailPass.getbuffer())
+					file.write(thumbnailPass.getvalue())
 		except thumbnailerrors.ThumbnailSizingError:
 			if args.ignore_errors:
 				print('Thumbnail generation has failed!')
@@ -161,8 +161,8 @@ def main():
 		#convert the description if necessary
 		if site.preferredFormat == 'bbcode':
 			print('Converting description to bbcode...')
-			args.description = markdownformatter.parseStringBBcode(args.description)
-
+			description = markdownformatter.parseStringBBcode(args.description)
+		else: description = args.description
 		#handle the story files
 		if site.preferredFormat == args.format or args.format == 'text':
 			story = open(storyLoc, 'r',encoding='utf-8')
@@ -172,41 +172,41 @@ def main():
 			if args.format == 'bbcode':
 				if site.preferredFormat == 'markdown':
 					print('Converting story to markdown...')
-					story = StringIO(bbcodeformatter.parseStringMarkdown(loadedStory))
-					if args.messy:
-						with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w') as file:
-							file.write(story.getvalue())
+					story = bbcodeformatter.parseStringMarkdown(loadedStory)
 				else:
 					raise Exception('Cannot convert BBcode to the format {}'.format(site.preferredFormat))
 			elif args.format == 'markdown':
 				if site.preferredFormat == 'bbcode':
 					print('Converting story to bbcode...')
-					story = StringIO(markdownformatter.parseStringBBcode(loadedStory))
-					if args.messy:
-						with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w') as file:
-							file.write(story.getvalue())
+					story = markdownformatter.parseStringBBcode(loadedStory)
 				else:
 					raise Exception('Cannot convert markdown to the format'.format(site.preferredFormat))
 			elif args.format == 'html':
 				if site.preferredFormat == 'bbcode':
 					print('Converting story to bbcode...')
-					story = StringIO(''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory))))
-					if args.messy:
-						with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w') as file:
-							file.write(story.getvalue())
+					story = ''.join(htmlformatter.formatFileBBcode(StringIO(loadedStory)))
 				elif site.preferredFormat == 'markdown':
 					print('Converting story to markdown...')
-					story = StringIO(''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory))))
-					if args.messy:
-						with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w') as file:
-							file.write(story.getvalue())
+					story = ''.join(htmlformatter.formatFileMarkdown(StringIO(loadedStory)))
 				else:
 					raise Exception('Cannot convert HTML to the format'.format(site.preferredFormat))
 
+			story = StringIO(story)
+			
+			if args.messy:
+				if site.preferredFormat == 'bbcode':
+					with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
+						file.write(story.getvalue())
+				elif site.preferredFormat == 'markdown':
+					with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
+						file.write(story.getvalue())
 		try:
 			print('Beginning {} submission'.format(site.name))
+			#reset virtual file stream if needed
+			thumbnailPass.seek(0)
+			story.seek(0)
 			if args.test: print('test: {} bypassed'.format(site.name))
-			else: site.submitStory(args.title, args.description, args.tags, args.rating, story, thumbnailPass)
+			else: site.submitStory(args.title, description, args.tags, args.rating, story, thumbnailPass)
 			print('{} submission completed successfully'.format(site.name))
 		except WebsiteError as e:
 			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
