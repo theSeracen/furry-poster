@@ -8,6 +8,11 @@ def parseStringMarkdown(line: str) -> str:
 		line = formatfunc(line)
 	return line
 
+def checkBBcode(line: str) -> str:
+	"""Check the passed string and validate all BBcode in it"""
+	line = __doubleNewLines(line)
+	return line
+
 def __italicsBBcodetoMarkdown(line: str) -> str:
 	tags = ['[I]','[i]','[/I]','[/i]']
 	for tag in tags:

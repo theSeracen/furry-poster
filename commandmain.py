@@ -31,6 +31,7 @@ def initParser():
 	thumbGroup.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 	parser.add_argument('-r', '--rating', choices=['general','adult'], default='adult', help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
+	parser.add_argument('-c', '--check-source', action='store_true', help='Run formatting checks on the source file')
 
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
@@ -121,8 +122,26 @@ def main():
 			storyLoc = args.directory + '\\' + file
 			print('File found: {}'.format(storyLoc))
 			break
-
 	if storyLoc is None: raise Exception('No story file of format {} found!'.format(args.format))
+
+	if args.check_source:
+		#load story and run checks
+		print('Checking source file...')
+		with open(storyLoc, 'r', encoding='utf-8') as file:
+			checkStory =  file.read()
+		if args.format == 'markdown':
+			newcheck = markdownformatter.checkMarkdown(checkStory)
+		elif args.format == 'bbbcode':
+			newcheck = bbcodeformatter.checkBBcode(checkStory)
+		elif args.format == 'text':
+			newcheck = markdownformatter.checkMarkdown(checkStory) #just use the markdown, it'll work for plain text too
+		else:
+			raise TypeError('Cannot format format type'.format(args.format))
+		if newcheck != checkStory:
+			print('Writing source changes...')
+			with open(storyLoc, 'w', encoding='utf-8') as file:
+				file.write(newcheck)
+		else: print('No changes to source needed')
 
 	#get thumbnail
 	if args.generate_thumbnail:

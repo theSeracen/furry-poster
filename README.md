@@ -33,9 +33,12 @@ Flags in the following section are optional. Note that if flags for title, descr
 - `-r, --rating` -> choose from `general` and `adult` for the rating of the story; defaults to `adult`
 - `-s, --post-script` -> boolean flag to look for a post-script file and add to end of description
 - `-m, --messy` -> Flag causes all dynamically-files to be saved to the disk
+- `-c, --check-source` -> Flag to check formatting of the source file e.g. adds a paragraph break if needed
 
+### Post-Script Flag
 The post-script must be a text file in the working directory named `post-script.txt`. It may have markdown formatting. The contents of this file is added to the description of every submission with a line break between it and the supplied description. This is to allow repetitive elements, such as Patreon reminders, 'thank-you's, or other footnotes to be added automatically without it having to be re-entered for every description.
 
+### Test and Debug Flags
 The following tags are meant to provide additional information, or have testing purposes:
 
 - `--test` -> including this tag will have the program run normally, but no submissions will be made

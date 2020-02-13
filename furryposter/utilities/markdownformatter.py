@@ -10,6 +10,11 @@ def findFiles(directory: str):
 	for markdownfile in markdowns:
 		formatFileBBcode(markdownfile)
 
+def checkMarkdown(line: str) -> str:
+	"""Check the passed string and validate all markdown in it"""
+	line = __doubleNewLines(line)
+	return line
+
 def parseStringBBcode(line: str) -> str:
 	"""Takes a string of markdown formatting and converts it to BBcode"""
 	formattingFunctions = [__linkMarkdowntoBBcode, __strongMarkdowntoBBcode, __boldMarkdowntoBBcode, __italicMarkdowntoBBcode, __doubleNewLines]
