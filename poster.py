@@ -1,13 +1,12 @@
 import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError, Website
-from furryposter.utilities import htmlformatter, markdownformatter, bbcodeformatter
 import os
 import re
 import http.cookiejar
 from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
-from furryposter.utilities.thumbnailgen import thumbnailerrors, thumbnailgeneration
+from furryposter.utilities.thumbnailgen import thumbnailerrors
 from furryposter.story import Story
 
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
