@@ -1,7 +1,8 @@
 """Contains abstract Website class for creating proper website interfaces to a real website, with errors for module/website related issues"""
 
 from abc import ABC, abstractmethod
-from typing import TextIO, BinaryIO, Dict
+from typing import TextIO, BinaryIO, Dict, List
+from furryposter.story import Story
 
 class WebsiteError(Exception): pass
 
@@ -31,6 +32,14 @@ class Website(ABC):
 		"""Convert the given tag string to a form that is valid on the site"""
 		pass
 	
+	@abstractmethod
+	def crawlGallery(self, user: str) -> List[str]:
+		pass
+
+	@abstractmethod
+	def parseSubmission(self, url: str) -> Story:
+		pass
+
 	def testSite(self, cj):
 		cj.load()
 		self.load(cj)
