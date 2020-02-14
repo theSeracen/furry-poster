@@ -1,3 +1,4 @@
 #The following packages are required
 requests
 bs4
+tqdm

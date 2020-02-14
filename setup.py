@@ -6,4 +6,5 @@ setup(name = 'furryposter',
 	  author='Seracen',
 	  packages = ['furryposter'],
 	  install_requires=['requests',
-					 'bs4'])
+					 'bs4',
+					 'tqdm'])
