@@ -38,11 +38,13 @@ def findFiles(directory: str, finalFormat: str):
 	htmls = [(directory + '\\' + file) for file in files if file.endswith('html')]
 	
 	for htmlpage in htmls:
-		if finalFormat == 'bbbcode':
+		name = htmlpage
+		htmlpage = open(htmlpage, 'r', encoding='utf-8')
+		if finalFormat == 'bbcode':
 			formatted = formatFileBBcode(htmlpage)
 		elif finalFormat == 'markdown':
 			formatted = formatFileMarkdown(htmlpage)
-		with open(htmlpage.split('.')[0] + 'formatted.txt','w',encoding='UTF-8') as storyfile:
+		with open(name.split('.')[0] + 'formatted.txt','w',encoding='UTF-8') as storyfile:
 			for part in formatted:
 				storyfile.write(part)
 
