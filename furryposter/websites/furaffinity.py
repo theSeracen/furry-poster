@@ -131,7 +131,4 @@ if __name__ == "__main__":
 	site = FurAffinity()
 	cj.load()
 	site.load(cj)
-	#site.testSite(cj)
-	subs = site.crawlGallery('seracen')
-	for sub in subs:
-		site.parseSubmission(sub)
+	site.testSite(cj)
