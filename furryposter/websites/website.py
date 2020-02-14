@@ -13,6 +13,7 @@ class Website(ABC):
 		self.name = name
 		self.preferredFormat = preferredFormat
 		self.ratings = ratings
+		self.cookiesRegex = r'^(master)?(cookies?)?\.txt'
 
 	def load(self, cookiesLoc):
 		cj = http.cookiejar.MozillaCookieJar(cookiesLoc)

@@ -11,6 +11,7 @@ from furryposter.story import Story
 class Weasyl(Website):
 	def __init__(self):
 		Website.__init__(self, 'weasyl', {'general':10, 'adult':40})
+		self.cookiesRegex = r'^(weasyl|ws)?(cookies?)?\.txt'
 
 	def validateTags(self,tags: str) -> str:
 		return tags.replace(', ',' ')

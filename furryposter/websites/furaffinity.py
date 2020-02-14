@@ -14,6 +14,7 @@ class FurAffinity(Website):
 	"""Class for a FurAffinity object"""
 	def __init__(self):
 		Website.__init__(self, 'furaffinity', {'general':0, 'adult':1}, 'bbcode')
+		self.cookiesRegex = r'^(furaffinity|fa)?(cookies?)?\.txt'
 
 	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
