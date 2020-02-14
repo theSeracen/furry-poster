@@ -98,9 +98,9 @@ class FurAffinity(Website):
 		for tag in rawTags:
 			tags = tags + tag.text + ', '
 		tags.strip(', ')
-		rating = soup.find('span', {'class':'rating-box'}).text.lower()
+		rating = soup.find('span', {'class':'rating-box'}).text.lower().strip()
 		if rating == 'mature': rating = 'adult'
-		source = s.get('http:{}'.format(soup.find('a', {'href':re.compile(r'//d.facdn.net/art/.*')}).get('href'))).text
+		source = s.get('http:{}'.format(soup.find('a', {'href':re.compile(r'//d.facdn.net/art/.*')}).get('href'))).content.decode('utf-8', 'ignore')
 		story = Story('bbcode', title, description, tags, rating)
 
 		thumbnail = soup.find('img', {'data-fullview-src': re.compile(r'//d.facdn.net/.*\.thumbnail\..*')}).get('data-fullview-src')

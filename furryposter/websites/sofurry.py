@@ -61,7 +61,7 @@ class SoFurry(Website):
 		if sub['contentlevel'] == 'clean': rating = 'general'
 		else: rating = 'adult'
 		story = Story('bbcode', sub['title'], sub['description'], sub['tags'], rating)
-		content = requests.get(subExtra['contentSourceUrl']).content.decode(encoding='utf-8')
+		content = requests.get(subExtra['contentSourceUrl']).content.decode(encoding='utf-8', errors='ignore')
 		content = re.sub(r'<br.*?>', '\n', content)
 		story.loadContent(io.StringIO(content))
 		if subExtra['thumbnailSourceUrl'] is not None: story.loadThumbnail('default', io.BytesIO(requests.get(subExtra['thumbnailSourceUrl']).content))

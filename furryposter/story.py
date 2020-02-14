@@ -32,8 +32,8 @@ class Story():
 		else: 
 			self.thumbnail = file.read()
 			file.close()
-	def forceGenThumbnail(profile: str = 'default') -> None:
-		self.thumbnail = thumbnailgeneration.makeThumbnail(self.title, self.tags.split(', '), thumbnailProfile).getvalue()
+	def forceGenThumbnail(self, profile: str = 'default') -> None:
+		self.thumbnail = thumbnailgeneration.makeThumbnail(self.title, self.tags.split(', '), profile).getvalue()
 
 	def giveStory(self, format: str) -> TextIO:
 		"""Returns StringIO of the story"""
