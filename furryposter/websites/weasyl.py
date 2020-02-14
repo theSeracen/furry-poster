@@ -68,7 +68,7 @@ class Weasyl(Website):
 		title = js['title']
 		description = self.__parseDescription(sub['description'])
 		tags = ', '.join(sub['tags'])
-		content = requests.get(sub['media']['submission'][0]['url']).content.decode(encoding='utf-8')
+		content = requests.get(sub['media']['submission'][0]['url']).content.decode(encoding='utf-8', errors='ignore')
 
 		thumbnail = None
 		if 'cover' in sub['media']:
