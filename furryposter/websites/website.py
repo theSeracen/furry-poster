@@ -14,9 +14,10 @@ class Website(ABC):
 		self.preferredFormat = preferredFormat
 		self.ratings = ratings
 
-	def load(self, cookies):
-		self.cookie = cookies
-
+	def load(self, cookiesLoc):
+		cj = http.cookiejar.MozillaCookieJar(cookiesLoc)
+		cj.load()
+		self.cookie = cj
 	@abstractmethod
 	def submitStory(self, title: str, description: str, tags: str, rating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via website mechanisms"""
@@ -40,9 +41,7 @@ class Website(ABC):
 	def parseSubmission(self, url: str) -> Story:
 		pass
 
-	def testSite(self, cj):
-		cj.load()
-		self.load(cj)
+	def testSite(self):
 		self.testAuthentication()
 		
 		title = input("Enter title: ")

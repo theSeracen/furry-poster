@@ -69,10 +69,8 @@ class SoFurry(Website):
 		return tags
 
 if __name__ == '__main__':
-	cj = http.cookiejar.MozillaCookieJar('sofurrycookies.txt')
 	site = SoFurry()
-	#site.testSite(cj)
-	cj.load()
-	site.load(cj)
+	site.load('sofurrycookies.txt')
+	site. testSite()
 	for sub in site.crawlGallery('seracen'):
 		site.parseSubmission(sub)
