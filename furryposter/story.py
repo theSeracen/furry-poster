@@ -9,12 +9,12 @@ class StoryConversionError(StoryError): pass
 class StoryEmpty(StoryError): pass
 
 class Story():
-	def __init__(self, sourceFormat: str, title: str, description: str, tags: str):
+	def __init__(self, sourceFormat: str, title: str, description: str, tags: str, rating: str):
 		self.sourceFormat = sourceFormat
 		self.title = title
 		self.description = description
 		self.tags = tags
-
+		self.rating = rating
 		self.content = None
 		self.thumbnail = None
 

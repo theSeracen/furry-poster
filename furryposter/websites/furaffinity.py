@@ -98,8 +98,10 @@ class FurAffinity(Website):
 		for tag in rawTags:
 			tags = tags + tag.text + ', '
 		tags.strip(', ')
+		rating = soup.find('span', {'class':'rating-box'}).text.lower()
+		if rating == 'mature': rating = 'adult'
 		source = s.get('http:{}'.format(soup.find('a', {'href':re.compile(r'//d.facdn.net/art/.*')}).get('href'))).text
-		story = Story('bbcode', title, description, tags)
+		story = Story('bbcode', title, description, tags, rating)
 
 		thumbnail = soup.find('img', {'data-fullview-src': re.compile(r'//d.facdn.net/.*\.thumbnail\..*')}).get('data-fullview-src')
 		story.content = source
@@ -115,9 +117,9 @@ class FurAffinity(Website):
 	def __parseHTMLDescTags(self, masterTag: bs4.Tag) -> str:
 		desc = ''
 		for tag in masterTag.children:
-			if tag.name =='i':
+			if tag.name == 'i':
 				desc = desc + '*{}*'.format(tag.text)
-			elif tag.name =='b':
+			elif tag.name == 'b':
 				desc = desc + '**{}**'.format(tag.text)
 			elif tag.name == 'a':
 				desc = desc + '[{}]({})'.format(tag.text, tag.get('href'))
@@ -130,4 +132,6 @@ class FurAffinity(Website):
 if __name__ == "__main__":
 	site = FurAffinity()
 	site.load('furaffinitycookies.txt')
+	for sub in site.crawlGallery('seracen'):
+		site.parseSubmission(sub)
 	site.testSite()
