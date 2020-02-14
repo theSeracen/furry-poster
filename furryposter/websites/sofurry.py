@@ -58,7 +58,7 @@ class SoFurry(Website):
 
 	def parseSubmission(self, sub: Dict) -> Story:
 		subExtra = json.loads(requests.get('http://api2.sofurry.com/std/getSubmissionDetails', params = {'id':sub['id']}).content)
-		if sub['contentlevel'] == 'clean': rating = 'general'
+		if sub['contentLevel'] == '0': rating = 'general'
 		else: rating = 'adult'
 		story = Story('bbcode', sub['title'], sub['description'], sub['tags'], rating)
 		content = requests.get(subExtra['contentSourceUrl']).content.decode(encoding='utf-8', errors='ignore')

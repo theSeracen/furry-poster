@@ -35,12 +35,14 @@ def main():
 	args = parser.parse_args()
 	if args.source == args.destination:
 		raise Exception('Source and destination sites cannot be the same')
-	if args.source == 'sofurry' and args.thumbnail_behaviour == 'source' and args.force:
+	if args.source == 'sofurry' and args.thumbnail_behaviour == 'source' and args.force is False:
 		print('Default thumbnails are generated in all Sofurry submissions and these cannot be distinguished from uploaded thumbnails. Do you wish to continue with this in mind?')
 		response = input(getstage() + '(Yes/No): ')
 		if 'n' in response.lower():
 			print('Aborting...')
 			exit(1)
+	if args.test:
+		print('Testing is enabled; submissions are disabled')
 	
 	source = determineSite(args.source)
 	dest = determineSite(args.destination)
@@ -58,14 +60,14 @@ def main():
 	print('{} submissions already in destination gallery'.format(len(destSubmissions)))
 
 	setstage('processing')
-	print('Processing source stories')
+	print('Processing source stories from {}'.format(source.name))
 
 	sourceStories = []
 	for sub in tqdm(sourceSubmissions, getstage().strip(), dynamic_ncols = True):
 		sourceStories.append(source.parseSubmission(sub))
 	sourceStories = list(filter(None, sourceStories))
 
-	print('Processing destination stories...')
+	print('Processing destination stories from {}'.format(dest.name))
 	destStories = []
 	for sub in tqdm(destSubmissions, getstage().strip(), dynamic_ncols = True):
 		destStories.append(dest.parseSubmission(sub))
