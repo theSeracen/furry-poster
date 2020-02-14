@@ -27,6 +27,7 @@ def initParser():
 
 	parser.add_argument('-d', '--delay', type=int, default=5, help='seconds between posts to new site')
 	parser.add_argument('-t', '--thumbnail-behaviour', choices=['new', 'source', 'none'], default='new')
+	parser.add_argument('-p', '--profile', default='default', help='Profile to use in thumbnail generation if -t flag set to new')
 	parser.add_argument('-f', '--force', action='store_true', help='Skips all checks and inputs')
 	parser.add_argument('--test', action='store_true', help = 'Aborts actual upload')
 
@@ -81,7 +82,7 @@ def main():
 		if story.title in destTitles:
 			print('Skipping {} of {}: {} found in destination gallery'.format(place + 1, len(sourceStories), story.title))
 		else:
-			if args.thumbnail_behaviour == 'new': story.forceGenThumbnail()
+			if args.thumbnail_behaviour == 'new': story.forceGenThumbnail(args.profile)
 			elif args.thumbnail_behaviour == 'none': story.thumbnail = None
 
 			print('Transferring {} of {}: Title {}'.format(place + 1, len(sourceStories), story.title))

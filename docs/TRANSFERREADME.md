@@ -26,6 +26,7 @@ The following flags are optional, and do not need to be included:
     - **`new`**
     - `source`
     - `none`
+- `-p, --profile` -> profile for thumbnail generation if `-t` flag is set to `new`
 - `-f, --force` -> suppresses all prompts and confirmations; **not recommended**
 - `--test` -> runs tool without uploading to destination site
 
