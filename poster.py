@@ -49,9 +49,7 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
 		else:
 			print('{}{} cannot find cookies; the site will be skipped'.format('[Site Init]\t', site.name))
 	else:
-		cj = http.cookiejar.MozillaCookieJar(cookiesLoc)
-		cj.load()
-		site.load(cj)
+		site.load(cookiesLoc)
 		try:
 			site.testAuthentication()
 		except AuthenticationError as e:

@@ -88,7 +88,7 @@ class Weasyl(Website):
 		return desc.strip()
 
 if __name__ == '__main__':
-	cj = http.cookiejar.MozillaCookieJar('weasylcookies.txt')
 	site = Weasyl()
-	site.testSite(cj)
+	site.load('weasylcookies.txt')
+	site.testSite()
 	

@@ -127,8 +127,6 @@ class FurAffinity(Website):
 		return desc
 
 if __name__ == "__main__":
-	cj = http.cookiejar.MozillaCookieJar("furaffinitycookies.txt")
 	site = FurAffinity()
-	cj.load()
-	site.load(cj)
-	site.testSite(cj)
+	site.load('furaffinitycookies.txt')
+	site.testSite()
