@@ -28,10 +28,12 @@ class Story():
 
 	def loadThumbnail(self, thumbnailProfile: str, file: BinaryIO = None):
 		"""Loads the thumbnail if a file is given, else generates it"""
-		if file is None: self.thumbnail = thumbnailgeneration.makeThumbnail(self.title, self.tags.split(', '), thumbnailProfile).getvalue()
+		if file is None: self.forceGenThumbnail(thumbnailProfile)
 		else: 
 			self.thumbnail = file.read()
 			file.close()
+	def forceGenThumbnail(profile: str = 'default') -> None:
+		self.thumbnail = thumbnailgeneration.makeThumbnail(self.title, self.tags.split(', '), thumbnailProfile).getvalue()
 
 	def giveStory(self, format: str) -> TextIO:
 		"""Returns StringIO of the story"""
