@@ -69,13 +69,16 @@ def main():
 
 	sites = []
 	if args.furaffinity:
-		sites.append(initSite(r'^(furaffinity|fa)?(cookies?)?\.txt', furaffinity.FurAffinity(), args.ignore_errors))
+		site = furaffinity.FurAffinity()
+		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 
 	if args.sofurry:
-		sites.append(initSite(r'^(sofurry|sf)?(cookies?)?\.txt', sofurry.SoFurry(), args.ignore_errors))
+		site = sofurry.SoFurry()
+		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 						
 	if args.weasyl:
-		sites.append(initSite(r'^(weasyl|ws)?(cookies?)?\.txt', weasyl.Weasyl(), args.ignore_errors))
+		site = weasyl.Weasyl()
+		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 	
 	sites = filter(None, sites)
 
@@ -105,7 +108,7 @@ def main():
 			else:
 				raise Exception('Post-script file cannot be found')
 	
-	submission = Story(args.format, args.title, args.description, args.tags)
+	submission = Story(args.format, args.title, args.description, args.tags, args.rating)
 	#determine file type to look for
 	storyLoc = None
 	args.format = args.format.lower()

@@ -1,6 +1,7 @@
 """Module for Weasyl support"""
 from furryposter.websites.website import Website, WebsiteError, AuthenticationError
-import requests, io
+import requests
+import io
 import bs4
 import json
 import http.cookiejar
@@ -67,7 +68,7 @@ class Weasyl(Website):
 		title = js['title']
 		description = self.__parseDescription(sub['description'])
 		tags = ', '.join(sub['tags'])
-		content =  requests.get(sub['media']['submission'][0]['url']).content.decode(encoding='utf-8')
+		content = requests.get(sub['media']['submission'][0]['url']).content.decode(encoding='utf-8')
 
 		thumbnail = None
 		if 'cover' in sub['media']:
@@ -75,7 +76,10 @@ class Weasyl(Website):
 		elif 'thumbnail-source' in sub['media']:
 			thumbnail = requests.get(sub['media']['thumbnail-source'][0]['url']).content
 
-		story = Story('markdown', title, description, tags)
+		if sub['rating'] == 'general': rating = 'general'
+		else: rating = 'adult'
+
+		story = Story('markdown', title, description, tags, rating)
 		story.loadContent(io.StringIO(content))
 		if thumbnail is not None: story.loadThumbnail('default', io.BytesIO(thumbnail))
 		return story

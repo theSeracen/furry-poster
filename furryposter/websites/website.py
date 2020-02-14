@@ -3,13 +3,14 @@
 from abc import ABC, abstractmethod
 from typing import TextIO, BinaryIO, Dict, List
 from furryposter.story import Story
+import http.cookiejar
 
 class WebsiteError(Exception): pass
 
 class AuthenticationError(WebsiteError):pass
 
 class Website(ABC):
-	def __init__(self, name: str, ratings: Dict[str, int], preferredFormat: str = 'markdown'):
+	def __init__(self, name: str, ratings: Dict[str, int], preferredFormat: str='markdown'):
 		self.name = name
 		self.preferredFormat = preferredFormat
 		self.ratings = ratings
