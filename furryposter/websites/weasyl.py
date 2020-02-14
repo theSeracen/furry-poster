@@ -1,10 +1,12 @@
 """Module for Weasyl support"""
 from furryposter.websites.website import Website, WebsiteError, AuthenticationError
-import requests
+import requests, io
 import bs4
+import json
 import http.cookiejar
 import re
-from typing import TextIO, BinaryIO
+from typing import TextIO, BinaryIO, List, Dict
+from furryposter.story import Story
 
 class Weasyl(Website):
 	def __init__(self):
@@ -42,6 +44,48 @@ class Weasyl(Website):
 
 			page = s.post(page.url, data=params)
 			if page.status_code != 200 or '/submissions/' not in page.url: raise WebsiteError("Weasyl thumbnail confirmation failed: Code {}".format(page.status_code))
+
+	def crawlGallery(self, user: str) -> List[str]:
+		self.testAuthentication()
+		s = requests.Session()
+		s.cookies = self.cookie
+		subs = []
+		passVals = {}
+		while True:
+			subsJson = json.loads(s.get('http://weasyl.com/api/users/{}/gallery'.format(user), params = passVals).content)
+			subs.extend(subsJson['submissions'])
+			if subsJson['nextid'] is None: break
+			passVals = {'nextid':subsJson['nextid']}
+	
+		subs = list(filter(lambda x: x['subtype'] == 'literary', subs))
+		#subs.reverse()
+		return subs
+
+	def parseSubmission(self, js: Dict) -> Story:
+		sub = json.loads(requests.get('http://weasyl.com/api/submissions/{}/view'.format(js['submitid']), cookies = self.cookie).content)
+		title = js['title']
+		description = self.__parseDescription(sub['description'])
+		tags = ', '.join(sub['tags'])
+		content =  requests.get(sub['media']['submission'][0]['url']).content.decode(encoding='utf-8')
+
+		thumbnail = None
+		if 'cover' in sub['media']:
+			thumbnail = requests.get(sub['media']['cover'][0]['url']).content
+		elif 'thumbnail-source' in sub['media']:
+			thumbnail = requests.get(sub['media']['thumbnail-source'][0]['url']).content
+
+		story = Story('markdown', title, description, tags)
+		story.loadContent(io.StringIO(content))
+		if thumbnail is not None: story.loadThumbnail('default', io.BytesIO(thumbnail))
+		return story
+
+	def __parseDescription(self, desc: str) -> str:
+		desc = re.sub(r'</?p>', '\n', desc)
+		desc = desc.replace('<br>','\n')
+		pattern = r'(<a.*?((?<=href=").*?)".*?>(.*?)</a>)'
+		for match in re.findall(pattern, desc):
+			desc = desc.replace(match[0], '[{}]({})'.format(match[1], match[2]))
+		return desc.strip()
 
 if __name__ == '__main__':
 	cj = http.cookiejar.MozillaCookieJar('weasylcookies.txt')

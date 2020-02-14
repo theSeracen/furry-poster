@@ -79,7 +79,7 @@ class FurAffinity(Website):
 		uniqueSubs = []
 		for sub in submissions:
 			if sub not in uniqueSubs: uniqueSubs.append(sub)
-		#uniqueSubs.reverse()
+		uniqueSubs.reverse()
 		return uniqueSubs
 
 	def parseSubmission(self, url: str) -> Optional[Story]:
