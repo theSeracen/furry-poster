@@ -1,13 +1,12 @@
 import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError, Website
-from furryposter.utilities import htmlformatter, markdownformatter, bbcodeformatter
 import os
 import re
 import http.cookiejar
 from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
-from furryposter.utilities.thumbnailgen import thumbnailerrors, thumbnailgeneration
+from furryposter.utilities.thumbnailgen import thumbnailerrors
 from furryposter.story import Story
 
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
@@ -50,9 +49,7 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
 		else:
 			print('{}{} cannot find cookies; the site will be skipped'.format('[Site Init]\t', site.name))
 	else:
-		cj = http.cookiejar.MozillaCookieJar(cookiesLoc)
-		cj.load()
-		site.load(cj)
+		site.load(cookiesLoc)
 		try:
 			site.testAuthentication()
 		except AuthenticationError as e:
@@ -72,13 +69,16 @@ def main():
 
 	sites = []
 	if args.furaffinity:
-		sites.append(initSite(r'^(furaffinity|fa)?(cookies?)?\.txt', furaffinity.FurAffinity(), args.ignore_errors))
+		site = furaffinity.FurAffinity()
+		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 
 	if args.sofurry:
-		sites.append(initSite(r'^(sofurry|sf)?(cookies?)?\.txt', sofurry.SoFurry(), args.ignore_errors))
+		site = sofurry.SoFurry()
+		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 						
 	if args.weasyl:
-		sites.append(initSite(r'^(weasyl|ws)?(cookies?)?\.txt', weasyl.Weasyl(), args.ignore_errors))
+		site = weasyl.Weasyl()
+		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 	
 	sites = filter(None, sites)
 
@@ -108,7 +108,7 @@ def main():
 			else:
 				raise Exception('Post-script file cannot be found')
 	
-	submission = Story(args.format, args.title, args.description, args.tags)
+	submission = Story(args.format, args.title, args.description, args.tags, args.rating)
 	#determine file type to look for
 	storyLoc = None
 	args.format = args.format.lower()

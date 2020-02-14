@@ -6,14 +6,15 @@ from furryposter.utilities.thumbnailgen import thumbnailgeneration
 
 class StoryError(Exception): pass
 class StoryConversionError(StoryError): pass
+class StoryEmpty(StoryError): pass
 
 class Story():
-	def __init__(self, sourceFormat: str, title: str, description: str, tags: str):
+	def __init__(self, sourceFormat: str, title: str, description: str, tags: str, rating: str):
 		self.sourceFormat = sourceFormat
 		self.title = title
 		self.description = description
 		self.tags = tags
-
+		self.rating = rating
 		self.content = None
 		self.thumbnail = None
 
@@ -25,15 +26,18 @@ class Story():
 			self.content = markdownformatter.checkMarkdown(self.content)
 		file.close()
 
-	def loadThumbnail(self, thumbnailProfile: str, file: BinaryIO = None,):
+	def loadThumbnail(self, thumbnailProfile: str, file: BinaryIO = None):
 		"""Loads the thumbnail if a file is given, else generates it"""
-		if file is None: self.thumbnail = thumbnailgeneration.makeThumbnail(self.title, self.tags.split(', '), thumbnailProfile).getvalue()
+		if file is None: self.forceGenThumbnail(thumbnailProfile)
 		else: 
 			self.thumbnail = file.read()
 			file.close()
+	def forceGenThumbnail(self, profile: str = 'default') -> None:
+		self.thumbnail = thumbnailgeneration.makeThumbnail(self.title, self.tags.split(', '), profile).getvalue()
 
 	def giveStory(self, format: str) -> TextIO:
 		"""Returns StringIO of the story"""
+		if self.content is None: raise StoryEmpty("Story '{}' has no content".format(self.title))
 		if self.sourceFormat == format: return io.StringIO(self.content)
 		elif self.sourceFormat == 'bbcode' and format == 'markdown': return io.StringIO(bbcodeformatter.parseStringMarkdown(self.content))
 		elif self.sourceFormat == 'markdown' and format == 'bbcode': return io.StringIO(markdownformatter.parseStringBBcode(self.content))

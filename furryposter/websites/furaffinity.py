@@ -2,15 +2,19 @@
 
 from furryposter.websites.website import Website, AuthenticationError, WebsiteError
 from furryposter.utilities import markdownformatter
+from furryposter.story import *
 import bs4
+import io
+import re
 import requests
 import http.cookiejar
-from typing import TextIO, BinaryIO
+from typing import TextIO, BinaryIO, List, Optional
 
 class FurAffinity(Website):
 	"""Class for a FurAffinity object"""
 	def __init__(self):
 		Website.__init__(self, 'furaffinity', {'general':0, 'adult':1}, 'bbcode')
+		self.cookiesRegex = r'^(furaffinity|fa)?(cookies?)?\.txt'
 
 	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
@@ -58,7 +62,76 @@ class FurAffinity(Website):
 		"""Convert the given tag string to a form that is valid on the site"""
 		return tags.replace(', ',' ')
 
+	def crawlGallery(self, user: str) -> List[str]:
+		"""Crawl a gallery for all the submissions"""
+		self.testAuthentication()
+		s = requests.Session()
+		s.cookies = self.cookie
+		galPage = 1
+		submissions = []
+		userGallery = 'http://www.furaffinity.net/gallery/{}/{}'.format(user, galPage)
+		foundSubs = self.__getGalleryPage(userGallery)
+		while foundSubs:
+			for sub in foundSubs:
+				submissions.append('http://www.furaffinity.net{}'.format(sub.get('href')))
+			galPage +=1
+			userGallery = 'http://www.furaffinity.net/gallery/{}/{}'.format(user, galPage)
+			foundSubs = self.__getGalleryPage(userGallery)
+		uniqueSubs = []
+		for sub in submissions:
+			if sub not in uniqueSubs: uniqueSubs.append(sub)
+		uniqueSubs.reverse()
+		return uniqueSubs
+
+	def parseSubmission(self, url: str) -> Optional[Story]:
+		s = requests.Session()
+		s.cookies = self.cookie
+		page = s.get(url)
+		soup = bs4.BeautifulSoup(page.text, 'html.parser')
+		subtype = soup.find('span', {'class':'category-name'}).text
+		if subtype != 'Story': return None
+
+		title = soup.find('div', {'class':'submission-title'}).text.strip()
+		description = self.__parseHTMLDescTags(soup.find('div', {'class':'submission-description'})).strip()
+		rawTags = soup.findAll('span', {'class':'tags'})
+		tags = ''
+		for tag in rawTags:
+			tags = tags + tag.text + ', '
+		tags.strip(', ')
+		rating = soup.find('span', {'class':'rating-box'}).text.lower().strip()
+		if rating == 'mature': rating = 'adult'
+		source = s.get('http:{}'.format(soup.find('a', {'href':re.compile(r'//d.facdn.net/art/.*')}).get('href'))).content.decode('utf-8', 'ignore')
+		story = Story('bbcode', title, description, tags, rating)
+
+		thumbnail = soup.find('img', {'data-fullview-src': re.compile(r'//d.facdn.net/.*\.thumbnail\..*')}).get('data-fullview-src')
+		story.content = source
+		if thumbnail is not None: story.loadThumbnail('default', io.BytesIO(s.get('http:{}'.format(thumbnail)).content))
+		return story
+
+
+	def __getGalleryPage(self, url: str) -> List[bs4.Tag]:
+		page = requests.get(url, cookies=self.cookie)
+		soup = bs4.BeautifulSoup(page.text, 'html.parser')
+		return soup.findAll('a', {'href': re.compile(r'/view/\d*')})
+	
+	def __parseHTMLDescTags(self, masterTag: bs4.Tag) -> str:
+		desc = ''
+		for tag in masterTag.children:
+			if tag.name == 'i':
+				desc = desc + '*{}*'.format(tag.text)
+			elif tag.name == 'b':
+				desc = desc + '**{}**'.format(tag.text)
+			elif tag.name == 'a':
+				desc = desc + '[{}]({})'.format(tag.text, tag.get('href'))
+			elif isinstance(tag, bs4.NavigableString):
+				desc = desc + tag
+			else:
+				desc = desc + self.__parseHTMLDescTags(tag)
+		return desc
+
 if __name__ == "__main__":
-	cj = http.cookiejar.MozillaCookieJar("cookies.txt")
 	site = FurAffinity()
-	site.testSite(cj)
+	site.load('furaffinitycookies.txt')
+	for sub in site.crawlGallery('seracen'):
+		site.parseSubmission(sub)
+	site.testSite()

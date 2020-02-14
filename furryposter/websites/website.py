@@ -1,21 +1,25 @@
 """Contains abstract Website class for creating proper website interfaces to a real website, with errors for module/website related issues"""
 
 from abc import ABC, abstractmethod
-from typing import TextIO, BinaryIO, Dict
+from typing import TextIO, BinaryIO, Dict, List
+from furryposter.story import Story
+import http.cookiejar
 
 class WebsiteError(Exception): pass
 
 class AuthenticationError(WebsiteError):pass
 
 class Website(ABC):
-	def __init__(self, name: str, ratings: Dict[str, int], preferredFormat: str = 'markdown'):
+	def __init__(self, name: str, ratings: Dict[str, int], preferredFormat: str='markdown'):
 		self.name = name
 		self.preferredFormat = preferredFormat
 		self.ratings = ratings
+		self.cookiesRegex = r'^(master)?(cookies?)?\.txt'
 
-	def load(self, cookies):
-		self.cookie = cookies
-
+	def load(self, cookiesLoc):
+		cj = http.cookiejar.MozillaCookieJar(cookiesLoc)
+		cj.load()
+		self.cookie = cj
 	@abstractmethod
 	def submitStory(self, title: str, description: str, tags: str, rating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via website mechanisms"""
@@ -31,9 +35,15 @@ class Website(ABC):
 		"""Convert the given tag string to a form that is valid on the site"""
 		pass
 	
-	def testSite(self, cj):
-		cj.load()
-		self.load(cj)
+	@abstractmethod
+	def crawlGallery(self, user: str) -> List[str]:
+		pass
+
+	@abstractmethod
+	def parseSubmission(self, url: str) -> Story:
+		pass
+
+	def testSite(self):
 		self.testAuthentication()
 		
 		title = input("Enter title: ")

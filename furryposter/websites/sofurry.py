@@ -5,11 +5,15 @@ import requests
 import bs4
 import http.cookiejar
 import re
-from typing import TextIO, BinaryIO
+import json
+import io
+from furryposter.story import Story
+from typing import TextIO, BinaryIO, List, Dict
 
 class SoFurry(Website):
 	def __init__(self):
 		Website.__init__(self, 'sofurry', {'general':0, 'adult':1}, 'bbcode')
+		self.cookiesRegex = r'^(sofurry|sf)?(cookies?)?\.txt'
 
 	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		"""Send story and submit it via POST"""
@@ -34,15 +38,42 @@ class SoFurry(Website):
 		if page.status_code != 200: raise WebsiteError('SoFurry story upload failed')
 
 	def testAuthentication(self):
-		
 		testpage = requests.get("https://sofurry.com/upload", cookies=self.cookie)
 		if 'Access Denied' in testpage.text: raise AuthenticationError("SoFurry authentication failed")
+
+	def crawlGallery(self, user: str) -> List[str]:
+		s = requests.Session()
+		s.cookies = self.cookie
+
+		user = json.loads(s.get('http://api2.sofurry.com/std/getUserProfile', params = {'username': user}).content)
+		page = 1
+		subs = []
+		while True:
+			js = json.loads(s.get('https://api2.sofurry.com/browse/user/stories?uid={}&format=json&&stories-page={}'.format(user['userID'], page), params = {'from': 'all time'}).content)
+			subs.extend(js['items'])
+			if len(js['items']) < 30: break
+			page += 1
+		subs.reverse()
+		return subs
+
+	def parseSubmission(self, sub: Dict) -> Story:
+		subExtra = json.loads(requests.get('http://api2.sofurry.com/std/getSubmissionDetails', params = {'id':sub['id']}).content)
+		if sub['contentLevel'] == '0': rating = 'general'
+		else: rating = 'adult'
+		story = Story('bbcode', sub['title'], sub['description'], sub['tags'], rating)
+		content = requests.get(subExtra['contentSourceUrl']).content.decode(encoding='utf-8', errors='ignore')
+		content = re.sub(r'<br.*?>', '\n', content)
+		story.loadContent(io.StringIO(content))
+		if subExtra['thumbnailSourceUrl'] is not None: story.loadThumbnail('default', io.BytesIO(requests.get(subExtra['thumbnailSourceUrl']).content))
+		return story
 
 	def validateTags(self, tags: str) -> str:
 		#no validation needed for SoFurry; accepts CSV
 		return tags
 
 if __name__ == '__main__':
-	cj = http.cookiejar.MozillaCookieJar('sofurrycookies.txt')
 	site = SoFurry()
-	site.testSite(cj)
+	site.load('sofurrycookies.txt')
+	site. testSite()
+	for sub in site.crawlGallery('seracen'):
+		site.parseSubmission(sub)
