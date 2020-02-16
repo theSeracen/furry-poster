@@ -31,6 +31,7 @@ def initParser():
 	thumbGroup.add_argument('-p', '--thumbnail', action='store_true', help="Flag for whether a thumbnail is present and should be used")
 	parser.add_argument('-s', '--post-script', action='store_true', help='Flag to look for a post-script.txt to add to the end of the description')
 	parser.add_argument('-r', '--rating', choices=['general','adult'], default='adult', help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
+	parser.add_argument('-w', '--warning', action='store_true', help='Adds a content warning to the top of a story')
 
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
@@ -127,6 +128,11 @@ def main():
 	if storyLoc is None: raise Exception('No story file of format {} found!'.format(args.format))
 
 	submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
+
+	if args.warning:
+		with open('content-warning.txt','r') as file:
+			warning = file.read()
+			submission.content = warning + '\n\n' + ('~' * 10) + '\n\n' + submission.content
 
 	#get thumbnail
 	if args.generate_thumbnail:
