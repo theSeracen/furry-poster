@@ -36,10 +36,14 @@ Flags in the following section are optional. Note that if flags for title, descr
     - `general`
     - **`adult`**
 - `-s, --post-script` -> boolean flag to look for a post-script file and add to end of description
+- `-w, --warning` -> flag to load a warning to add to the beginning of the story
 - `-m, --messy` -> Flag causes all dynamically-generated files to be saved to the disk
 
 ### Post-Script Flag
 The post-script must be a text file in the working directory named `post-script.txt`. It may have markdown formatting. The contents of this file is added to the description of every submission with a line break between it and the supplied description. This is to allow repetitive elements, such as Patreon reminders, 'thank-you's, or other footnotes to be added automatically without it having to be re-entered for every description.
+
+### Warning Flag
+The warning file must be named `content-warning.txt` for the program to find it, otherwise an error will be raised. The content of the file will be prepended to the story content so that it is displayed prominently. A line break and section separator will also be added to distinguish this from the story content.
 
 ### Thumbnail Generation and Story Conversion
 The program includes story conversion modules to convert the loaded file to formats that are natively compatible with each site. Additionally, there exists a thumbnail generation utility to create thumbnails if one is not provided, with a number of customisation options. For more details, view the [Utilities README](UTILITIESREADME.md).

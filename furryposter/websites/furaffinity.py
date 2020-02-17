@@ -94,10 +94,10 @@ class FurAffinity(Website):
 		title = soup.find('div', {'class':'submission-title'}).text.strip()
 		description = self.__parseHTMLDescTags(soup.find('div', {'class':'submission-description'})).strip()
 		rawTags = soup.findAll('span', {'class':'tags'})
-		tags = ''
+		tags = []
 		for tag in rawTags:
-			tags = tags + tag.text + ', '
-		tags.strip(', ')
+			tags.append(tag.text)
+		tags = ', '.join(tags)
 		rating = soup.find('span', {'class':'rating-box'}).text.lower().strip()
 		if rating == 'mature': rating = 'adult'
 		source = s.get('http:{}'.format(soup.find('a', {'href':re.compile(r'//d.facdn.net/art/.*')}).get('href'))).content.decode('utf-8', 'ignore')

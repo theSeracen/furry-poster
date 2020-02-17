@@ -482,3 +482,4 @@ dmypy.json
 .pyre/
 *cookies.txt
 /post-script.txt
+*.txt
