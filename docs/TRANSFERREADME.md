@@ -27,8 +27,12 @@ The following flags are optional, and do not need to be included:
     - `source`
     - `none`
 - `-p, --profile` -> profile for thumbnail generation if `-t` flag is set to `new`
+- `-m, --max` -> maximum number of new commissions to post; defaults to unlimited
 - `-f, --force` -> suppresses all prompts and confirmations; **not recommended**
 - `--test` -> runs tool without uploading to destination site
+
+### Maximum Number of Submissions
+With the use of the `--max` flag, the number of submissions posted to the new site can be limited. For example, if `5` is used, then the five oldest submissions not in the target gallery will be transferred. Any more submissions will be aborted. This has the use of staggering a large number of uploads. For example, if there are 100 submissions to transfer, the `--max` flag can be set to 10 and the transfer tool run once a week to stagger the uploads.
 
 ## Thumbnail Behaviours
 There are three possible options for this flag:

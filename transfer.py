@@ -8,17 +8,17 @@ import builtins
 import time
 from tqdm import tqdm
 
-stage = '[init]\t'
+stage =''
 def print(inp: str): builtins.print(stage + inp)
 def setstage(newstage:str):
 	global stage
-	stage = '[{}]\t'.format(newstage)
+	stage = '[{}]'.format(newstage).ljust(15)
 def getstage():
 	global stage
 	return stage
 
 parser = argparse.ArgumentParser(prog="furrytransfer", description="Transfer galleries between furry sites")
-
+setstage('init')
 
 def initParser():
 	parser.add_argument('source', metavar='S', choices=['furaffinity','sofurry','weasyl'], help='site with gallery')
@@ -28,6 +28,7 @@ def initParser():
 	parser.add_argument('-d', '--delay', type=int, default=5, help='seconds between posts to new site')
 	parser.add_argument('-t', '--thumbnail-behaviour', choices=['new', 'source', 'none'], default='new')
 	parser.add_argument('-p', '--profile', default='default', help='Profile to use in thumbnail generation if -t flag set to new')
+	parser.add_argument('-m', '--max', type=int, default=None, help='Maximum number of stories to post')
 	parser.add_argument('-f', '--force', action='store_true', help='Skips all checks and inputs')
 	parser.add_argument('--test', action='store_true', help = 'Aborts actual upload')
 
@@ -42,9 +43,13 @@ def main():
 		if 'n' in response.lower():
 			print('Aborting...')
 			exit(1)
+
 	if args.test:
 		print('Testing is enabled; submissions are disabled')
 	
+	if args.max:
+		print('Only {} submissions will be transferred'.format(args.max))
+
 	source = determineSite(args.source)
 	dest = determineSite(args.destination)
 	if args.force is False:
@@ -64,13 +69,13 @@ def main():
 	print('Processing source stories from {}'.format(source.name))
 
 	sourceStories = []
-	for sub in tqdm(sourceSubmissions, getstage().strip(), dynamic_ncols = True):
+	for sub in tqdm(sourceSubmissions, getstage(), dynamic_ncols = True):
 		sourceStories.append(source.parseSubmission(sub))
 	sourceStories = list(filter(None, sourceStories))
 
 	print('Processing destination stories from {}'.format(dest.name))
 	destStories = []
-	for sub in tqdm(destSubmissions, getstage().strip(), dynamic_ncols = True):
+	for sub in tqdm(destSubmissions, getstage(), dynamic_ncols = True):
 		destStories.append(dest.parseSubmission(sub))
 	destStories = list(filter(None, destStories))
 
@@ -78,6 +83,7 @@ def main():
 	print('{} Stories to be transferred'.format(len(sourceStories)))
 	destTitles = [story.title for story in destStories]
 	
+	postCount = 0
 	for place, story in enumerate(sourceStories):
 		if story.title in destTitles:
 			print('Skipping {} of {}: {} found in destination gallery'.format(place + 1, len(sourceStories), story.title))
@@ -85,12 +91,20 @@ def main():
 			if args.thumbnail_behaviour == 'new': story.forceGenThumbnail(args.profile)
 			elif args.thumbnail_behaviour == 'none': story.thumbnail = None
 
-			print('Transferring {} of {}: Title {}'.format(place + 1, len(sourceStories), story.title))
+			print('Transferring {} of {} --- {}'.format(place + 1, len(sourceStories), story.title))
 			if args.test is False: dest.submitStory(story.title, story.giveDescription(dest.preferredFormat), story.tags, story.rating, story.giveStory(dest.preferredFormat), story.giveThumbnail())
+
+			postCount +=1
+			if args.max:
+				if postCount >= args.max:
+					print('Posting limit reached!')
+					break
+
 			time.sleep(args.delay)
 
 	setstage('complete')
 	print('Transfer successfully completed')
+	print('{} stories transferred'.format(postCount))
 
 def determineSite(site: str) -> Website:
 	if site == 'furaffinity': 
