@@ -19,7 +19,7 @@ class Weasyl(Website):
 
 	def testAuthentication(self):
 		page = requests.get('https://www.weasyl.com/messages/notifications', cookies=self.cookie)
-		if 'You must be signed in to perform this operation.' in page.text: raise AuthenticationError('Weasyl authentication failed')
+		if page.status_code != 200 or 'You must be signed in to perform this operation.' in page.text: raise AuthenticationError('Weasyl authentication failed')
 	
 	def submitStory(self, title: str, description: str, tags: str, passedRating: str, story: TextIO, thumbnail):
 		

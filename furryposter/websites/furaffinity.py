@@ -57,7 +57,7 @@ class FurAffinity(Website):
 		"""Test that the user is properly authenticated on the site"""
 		#try to get a restricted page and error on bad result
 		testpage = requests.get("https://www.furaffinity.net/controls/settings/", cookies=self.cookie)
-		if "Please log in!" in testpage.text: raise AuthenticationError("FurAffinity authentication failed")
+		if testpage.status_code != 200 or "Please log in!" in testpage.text: raise AuthenticationError("FurAffinity authentication failed")
 
 
 	def validateTags(self, tags: str) -> str:
