@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError, Website
