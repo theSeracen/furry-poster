@@ -10,7 +10,17 @@ from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
 from furryposter.utilities.thumbnailgen import thumbnailerrors
 from furryposter.story import Story
+import builtins
 
+stage = ''
+def print(inp: str): builtins.print(stage + inp)
+def setstage(newstage:str):
+	global stage
+	stage = '[{}]'.format(newstage).ljust(15)
+def getstage():
+	global stage
+	return stage
+setstage('init')
 parser = argparse.ArgumentParser(prog="furrystoryuploader", description="Post stories to furry websites")
 
 def initParser():
@@ -50,7 +60,7 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
 		if ignore_errors is False:
 			raise AuthenticationError('{} cannot find a cookies file'.format(site.name))
 		else:
-			print('{}{} cannot find cookies; the site will be skipped'.format('[Site Init]\t', site.name))
+			print('{} cannot find cookies; the site will be skipped'.format(site.name))
 	else:
 		site.load(cookiesLoc)
 		try:
@@ -61,7 +71,7 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
 			else:
 				raise
 		else:
-			print('{}{} successfully authenticated'.format('[Site Init]\t', site.name))
+			print('{} successfully authenticated'.format(site.name))
 			return site
 	return None
 
@@ -85,7 +95,7 @@ def main():
 	
 	sites = filter(None, sites)
 
-	stage = '[Loading]\t'
+	setstage('loading')
 
 	#now we can go into checking for all the required items
 	if os.path.isdir(args.directory) is False: raise Exception("Valid directory required")
@@ -102,12 +112,12 @@ def main():
 	if args.tags == '': raise Exception('No tags specified!')
 	if args.post_script:
 		if os.path.exists('post-script.txt'):
-			print('{}Post-script found'.format(stage))
+			print('Post-script found')
 			with open('post-script.txt','r',encoding='utf-8') as post:
 				args.description = args.description + '\n\n' + ''.join(post.readlines())
 		else:
 			if args.ignore_errors:
-				print('{}Post-script file cannot be loaded!\nContinuing...'.format(stage))
+				print('Post-script file cannot be loaded!\nContinuing...')
 			else:
 				raise Exception('Post-script file cannot be found')
 	
@@ -125,7 +135,7 @@ def main():
 	for file, ending in ((file, ending) for ending in ends for file in os.listdir(args.directory)):
 		if file.endswith(ending): 
 			storyLoc = args.directory + '\\' + file
-			print('{}File found: {}'.format(stage, storyLoc))
+			print('File found: {}'.format(storyLoc))
 			break
 	if storyLoc is None: raise Exception('No story file of format {} found!'.format(args.format))
 
@@ -141,12 +151,12 @@ def main():
 		try:
 			submission.loadThumbnail(args.generate_thumbnail)
 			if args.messy:
-				print('{}Saving thumbnail to file...'.format(stage))
+				print('Saving thumbnail to file...')
 				with open(args.directory + '\\thumbnail.png', 'wb') as file:
 					file.write(submission.giveThumbnail().getvalue())
 		except thumbnailerrors.ThumbnailSizingError:
 			if args.ignore_errors:
-				print('{}Thumbnail generation has failed!'.format(stage))
+				print('Thumbnail generation has failed!')
 				thumbnailPass = None
 			else:
 				raise
@@ -156,12 +166,12 @@ def main():
 			for file in os.listdir(args.directory):
 				if re.match('.*\\.(png|jpg)', file):
 					thumbnailLoc = args.directory + '\\' + file
-					print('{}Thumbnail file found'.format(stage))
+					print('Thumbnail file found')
 					submission.loadThumbnail(open(thumbnailLoc, 'rb'))
 					break
 			if thumbnailLoc is None:
 				if args.ignore_errors:
-					print('{}No thumbnail found!\nContinuing...'.format(stage))
+					print('No thumbnail found!\nContinuing...')
 				else:
 					raise Exception('No thumbnail file found!')
 
@@ -175,11 +185,11 @@ def main():
 				with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
 					file.write(submission.giveStory('markdown').getvalue())
 		try:
-			stage = '[Posting]\t'
-			print('{}Beginning {} submission'.format(stage, site.name))
-			if args.test: print('{}test: {} bypassed'.format(stage, site.name))
+			setstage('posting')
+			print('Beginning {} submission'.format(site.name))
+			if args.test: print('test: {} bypassed'.format(site.name))
 			else: site.submitStory(submission.title, submission.giveDescription(site.preferredFormat), submission.tags, args.rating, submission.giveStory(site.preferredFormat), submission.giveThumbnail())
-			print('{}{} submission completed successfully'.format(stage, site.name))
+			print('{} submission completed successfully'.format(site.name))
 		except WebsiteError as e:
 			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
 			else: raise
