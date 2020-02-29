@@ -45,6 +45,7 @@ def initParser():
 	parser.add_argument('-r', '--rating', choices=['general','adult'], default='adult', help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
 	parser.add_argument('-w', '--warning', action='store_true', help='Adds a content warning to the top of a story')
 
+	parser.add_argument('-o', '--offline', action='store_true', help='Converts and writes everything to files but does not upload')
 	parser.add_argument('--test', action='store_true', help='debugging flag; if included, the program will do everything but submit')
 
 
@@ -80,20 +81,23 @@ def main():
 	initParser()
 	args = parser.parse_args()
 
-	sites = []
-	if args.furaffinity:
-		site = furaffinity.FurAffinity()
-		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
+	if args.offline:
+		print('Offline mode is active')
+	else:
+		sites = []
+		if args.furaffinity:
+			site = furaffinity.FurAffinity()
+			sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 
-	if args.sofurry:
-		site = sofurry.SoFurry()
-		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
+		if args.sofurry:
+			site = sofurry.SoFurry()
+			sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 						
-	if args.weasyl:
-		site = weasyl.Weasyl()
-		sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
+		if args.weasyl:
+			site = weasyl.Weasyl()
+			sites.append(initSite(site.cookiesRegex, site, args.ignore_errors))
 	
-	sites = filter(None, sites)
+		sites = filter(None, sites)
 
 	setstage('loading')
 
@@ -110,6 +114,7 @@ def main():
 	if args.title == '': raise Exception('No title specified!')
 	if args.description == '': raise Exception('No description specified!')
 	if args.tags == '': raise Exception('No tags specified!')
+
 	if args.post_script:
 		if os.path.exists('post-script.txt'):
 			print('Post-script found')
@@ -176,23 +181,39 @@ def main():
 					raise Exception('No thumbnail file found!')
 
 	#submit the files to each website
-	for site in sites:
-		if args.messy:
-			if site.preferredFormat == 'bbcode':
-				with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
-					file.write(submission.giveStory('bbcode').getvalue())
-			elif site.preferredFormat == 'markdown':
-				with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
-					file.write(submission.giveStory('markdown').getvalue())
-		try:
-			setstage('posting')
-			print('Beginning {} submission'.format(site.name))
-			if args.test: print('test: {} bypassed'.format(site.name))
-			else: site.submitStory(submission.title, submission.giveDescription(site.preferredFormat), submission.tags, args.rating, submission.giveStory(site.preferredFormat), submission.giveThumbnail())
-			print('{} submission completed successfully'.format(site.name))
-		except WebsiteError as e:
-			if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
-			else: raise
+	if args.offline:
+		setstage('writing')
+		print('writing story files...')
+		with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
+			file.write(submission.giveStory('bbcode').getvalue())
+		with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
+			file.write(submission.giveStory('markdown').getvalue())
+		print('writing description...')
+		with open(args.directory + '\\description.txt', 'w', encoding='utf-8') as file:
+			file.write(submission.giveDescription('bbcode'))
+		with open(args.directory + '\\description.md', 'w', encoding='utf-8') as file:
+			file.write(submission.giveDescription('markdown'))
+		print('writing thumbnail...')
+		with open(args.directory + '\\thumbnail.png', 'wb') as file:
+			file.write(submission.giveThumbnail().getvalue())
+	else:
+		for site in sites:
+			if args.messy:
+				if site.preferredFormat == 'bbcode':
+					with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
+						file.write(submission.giveStory('bbcode').getvalue())
+				elif site.preferredFormat == 'markdown':
+					with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
+						file.write(submission.giveStory('markdown').getvalue())
+			try:
+				setstage('posting')
+				print('Beginning {} submission'.format(site.name))
+				if args.test: print('test: {} bypassed'.format(site.name))
+				else: site.submitStory(submission.title, submission.giveDescription(site.preferredFormat), submission.tags, args.rating, submission.giveStory(site.preferredFormat), submission.giveThumbnail())
+				print('{} submission completed successfully'.format(site.name))
+			except WebsiteError as e:
+				if args.ignore_errors: print('{} has failed with exception {}'.format(site.name, e))
+				else: raise
 
 if __name__ == '__main__':
 	main()
