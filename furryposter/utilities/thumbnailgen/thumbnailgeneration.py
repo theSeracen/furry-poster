@@ -99,6 +99,8 @@ def makeThumbnail(title: str, tags: List[str], configSection: str='default') -> 
 	if len(tags) > configs.getint('maxTags'):
 		tags = tags[:configs.getint('maxTags')]
 
+	tags = [tag.title() for tag in tags]
+
 	thumbnail = __createBase()
 	thumbnail = __addText(title, tags, thumbnail)
 	thumbfile = BytesIO()
