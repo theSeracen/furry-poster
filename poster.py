@@ -194,8 +194,9 @@ def main():
 		with open(args.directory + '\\description.md', 'w', encoding='utf-8') as file:
 			file.write(submission.giveDescription('markdown'))
 		print('writing thumbnail...')
-		with open(args.directory + '\\thumbnail.png', 'wb') as file:
-			file.write(submission.giveThumbnail().getvalue())
+		if submission.thumbnail:
+			with open(args.directory + '\\thumbnail.png', 'wb') as file:
+				file.write(submission.giveThumbnail().getvalue())
 	else:
 		for site in sites:
 			if args.messy:
