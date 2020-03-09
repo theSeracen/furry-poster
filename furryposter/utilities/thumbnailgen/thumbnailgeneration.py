@@ -95,6 +95,7 @@ def makeThumbnail(title: str, tags: List[str], configSection: str='default') -> 
 		print('No valid config found under {}'.format(configSection))
 		raise
 
+	tags = [tag.title() for tag in tags]
 	if len(tags) > configs.getint('maxTags'):
 		tags = tags[:configs.getint('maxTags')]
 
