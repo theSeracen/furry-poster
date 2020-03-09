@@ -25,30 +25,32 @@ class FurAffinity(Website):
 		description = markdownformatter.parseStringBBcode(description)
 
 		#type selection
-		page = s.post('http://www.furaffinity.net/submit/', data={'part': 2, 'submission_type':'story'})
+		page = s.post('http://www.furaffinity.net/submit/', params={'part': 2, 'submission_type':'story'})
 		if page.status_code != 200: raise WebsiteError('An error has occurred when trying to reach FurAffinity')
+		elif bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'part'})['value'] == '2': raise WebsiteError("Posting didn't move on from first part")
 
 		#file upload stage
-		key = bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'key'})['value']
+		key = bs4.BeautifulSoup(page.content, 'html.parser').find('div', {'class': 'content'}).find('input', {'name':'key'})['value']
 		if thumbnail is not None: uploadFiles = {'submission': story, 'thumbnail':thumbnail}
 		else: uploadFiles = {'submission':story}
 		page = s.post('http://www.furaffinity.net/submit/', data={'part': 3, 'submission_type':'story', 'key':key}, files=uploadFiles)
 
 		if 'Uploaded file has a filesize of 0 bytes' in page.text: raise WebsiteError('One of the uploaded files read as 0 bytes')
 		elif 'Error encountered' in page.text: raise WebsiteError('Error encountered with file upload')
+		elif bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'part'})['value'] == '2': raise WebsiteError('Furaffinity submission stage reverted')
 		elif page.status_code != 200: raise WebsiteError('The upload page returned with an error')
 
-		#final stage
+		#final stage		
+		key = bs4.BeautifulSoup(page.content, 'html.parser').find('div', {'class': 'content'}).find('input', {'name':'key'})['value']
 		cat = bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'cat_duplicate'})['value']
-		key = bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name':'key'})['value']
 
 		#TODO add customisation for hardcoded specifications and categories
-		params = {'key': key, 'part':5, 'cat_duplicate':cat, 'submission_type':'story',
+		storyParams = {'key': key, 'part':5, 'cat_duplicate':cat, 'submission_type':'story',
 			'atype':1, 'species':1, 'gender':0, 'rating': self.ratings[passedRating],
 			'title':title, 'message':description,'keywords':tags,
 			'scrap': 0}
 
-		page = s.post('https://www.furaffinity.net/submit/story/4', data=params)
+		page = s.post('https://www.furaffinity.net/submit/story/4', data=storyParams)
 		if 'Security code missing or invalid' in page.text or 'view' not in page.url: raise WebsiteError("FurAffinity submission failed")
 
 	def testAuthentication(self):
