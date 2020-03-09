@@ -33,7 +33,7 @@ class FurAffinity(Website):
 		key = bs4.BeautifulSoup(page.content, 'html.parser').find('div', {'class': 'content'}).find('input', {'name':'key'})['value']
 		if thumbnail is not None: uploadFiles = {'submission': story, 'thumbnail':thumbnail}
 		else: uploadFiles = {'submission':story}
-		page = s.post('http://www.furaffinity.net/submit/', data={'part': 3, 'submission_type':'story', 'key':key}, files=uploadFiles)
+		page = s.post('http://www.furaffinity.net/submit/story/4', data={'part': 3, 'submission_type':'story', 'key':key}, files=uploadFiles)
 
 		if 'Uploaded file has a filesize of 0 bytes' in page.text: raise WebsiteError('One of the uploaded files read as 0 bytes')
 		elif 'Error encountered' in page.text: raise WebsiteError('Error encountered with file upload')
