@@ -30,7 +30,7 @@ def __determineOptimalTextSize(
     else:
         sizeIndex = 0
     font = ImageFont.truetype(
-        '/usr/share/fonts/truetype/freefont/FreeMono.ttf',
+        '/usr/share/fonts/truetype/freefont/FreeSerif.ttf',
         textSize)
     while font.getsize_multiline(text)[sizeIndex] < maxSize:
         if doingTags:
@@ -40,7 +40,7 @@ def __determineOptimalTextSize(
                 break
         textSize += 1
         font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/freefont/FreeMono.ttf", textSize)
+            "/usr/share/fonts/truetype/freefont/FreeSerif.ttf", textSize)
 
     return textSize - 1
 
@@ -76,14 +76,14 @@ def __addText(title: str, tags: List[str], base: Image) -> Image:
 
     title, titlesize = __findOptimalTitle(title)
     font = ImageFont.truetype(
-        "/usr/share/fonts/truetype/freefont/FreeMono.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
         titlesize)
 
     # max out the size and then centre if too big
     if titlesize > configs.getint('maxTitleSize'):
         titlesize = configs.getint('maxTitleSize')
         font = ImageFont.truetype(
-            "/usr/share/fonts/truetype/freefont/FreeMono.ttf", titlesize)
+            "/usr/share/fonts/truetype/freefont/FreeSerif.ttf", titlesize)
         wid, hei = font.getsize_multiline(title)
         newTitlex = (base.width - wid) / 2
         titleStart = (newTitlex, titleStart[1])
@@ -105,12 +105,12 @@ def __addText(title: str, tags: List[str], base: Image) -> Image:
         tagsize = titlesize - 11
 
     font = ImageFont.truetype(
-        '/usr/share/fonts/truetype/freefont/FreeMono.ttf', tagsize)
+        '/usr/share/fonts/truetype/freefont/FreeSerif.ttf', tagsize)
 
     tagswidth, tagsheight = font.getsize_multiline(tags)
     startx = (base.width - tagswidth) / 2
     font = ImageFont.truetype(
-        '/usr/share/fonts/truetype/freefont/FreeMono.ttf',
+        '/usr/share/fonts/truetype/freefont/FreeSerif.ttf',
         tagsize - 1)
     tagColour = tuple((int(val)
                        for val in configs.get('tagColour').split(', ')))
