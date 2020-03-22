@@ -1,4 +1,4 @@
-# furry-poster V0.4.1
+# furry-poster V0.4.2
 ## `poster.py`
 This is a tool for posting a single story to multiple sites. Currently, the following sites are supported:
 

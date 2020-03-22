@@ -39,7 +39,7 @@ class SoFurry(Website):
 
 	def testAuthentication(self):
 		testpage = requests.get("https://sofurry.com/upload", cookies=self.cookie)
-		if 'Access Denied' in testpage.text: raise AuthenticationError("SoFurry authentication failed")
+		if testpage.status_code != 200 or 'Access Denied' in testpage.text: raise AuthenticationError("SoFurry authentication failed")
 
 	def crawlGallery(self, user: str) -> List[str]:
 		s = requests.Session()
