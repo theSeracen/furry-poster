@@ -262,10 +262,6 @@ def main():
     if args.generate_thumbnail:
         try:
             submission.loadThumbnail(args.generate_thumbnail)
-            if args.messy:
-                print('Saving thumbnail to file...')
-                with open(os.path.join(args.directory, 'thumbnail.png'), 'wb') as file:
-                    file.write(submission.giveThumbnail().getvalue())
         except thumbnailerrors.ThumbnailSizingError:
             if args.ignore_errors:
                 print('Thumbnail generation has failed!')
@@ -305,14 +301,16 @@ def main():
             with open(os.path.join(args.directory, 'thumbnail.png'), 'wb') as file:
                 file.write(submission.giveThumbnail().getvalue())
     else:
+        if args.messy:
+            print('Saving thumbnail to file...')
+            with open(os.path.join(args.directory, 'thumbnail.png'), 'wb') as file:
+                file.write(submission.giveThumbnail().getvalue())
+            with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
+                file.write(submission.giveStory('bbcode').getvalue())
+            with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
+                file.write(submission.giveStory('markdown').getvalue())
+
         for site in sites:
-            if args.messy:
-                if site.preferredFormat == 'bbcode':
-                    with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
-                        file.write(submission.giveStory('bbcode').getvalue())
-                elif site.preferredFormat == 'markdown':
-                    with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
-                        file.write(submission.giveStory('markdown').getvalue())
             try:
                 setstage('posting')
                 print('Beginning {} submission'.format(site.name))
