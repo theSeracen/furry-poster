@@ -142,9 +142,13 @@ def main():
     initParser()
     args = parser.parse_args()
 
+    args.directory = pathlib.Path(args.directory)
+
     if not args.outputdir:
         # if no directory is specified, use the directory with the story file
         args.outputdir = args.directory
+    else:
+        args.outputdir = pathlib.Path(args.outputdir)
 
     if args.offline:
         print('Offline mode is active')
@@ -167,8 +171,11 @@ def main():
     setstage('loading')
 
     # now we can go into checking for all the required items
-    if os.path.isdir(args.directory) is False:
+    if args.directory.is_dir() is False:
         raise Exception("Valid directory required")
+
+    if args.outputdir.is_dir() is False:
+        raise Exception("Valid output directory required")
 
     if args.title is None:
         args.title = input('Please enter a title: ')
