@@ -4,6 +4,7 @@ import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError, Website
 import os
+import pathlib
 import re
 import http.cookiejar
 from io import StringIO, TextIOWrapper, BufferedReader
@@ -37,11 +38,8 @@ parser = argparse.ArgumentParser(
 def initParser():
     thumbGroup = parser.add_mutually_exclusive_group()
     parser.add_argument('directory', metavar='D')
-    parser.add_argument(
-        '-i',
-        '--ignore-errors',
-        action='store_true',
-        help='Ignore all errors and continue with other sites')
+    parser.add_argument('-i', '--ignore-errors', action='store_true',
+                        help='Ignore all errors and continue with other sites')
     parser.add_argument(
         '-f',
         '--format',
@@ -66,37 +64,16 @@ def initParser():
         help='Flag causes a thumbnail to be dynamically generated. The default profile is used in thumbnail.config unless specified')
 
     # site flags
-    parser.add_argument(
-        '-F',
-        '--furaffinity',
-        action='store_true',
-        help="Flag for whether FurAffinity should be tried")
-    parser.add_argument(
-        '-S',
-        '--sofurry',
-        action='store_true',
-        help="Flag for whether SoFurry should be tried")
-    parser.add_argument(
-        '-W',
-        '--weasyl',
-        action='store_true',
-        help="Flag for whether Weasyl should be tried")
+    parser.add_argument('-F', '--furaffinity', action='store_true', help="Flag for whether FurAffinity should be tried")
+    parser.add_argument('-S', '--sofurry', action='store_true', help="Flag for whether SoFurry should be tried")
+    parser.add_argument('-W', '--weasyl', action='store_true', help="Flag for whether Weasyl should be tried")
 
     # story details
-    parser.add_argument(
-        '-t',
-        '--title',
-        help="String for the title of the story")
-    parser.add_argument(
-        '-d',
-        '--description',
-        help="String for the description of the story")
+    parser.add_argument('-t', '--title', help="String for the title of the story")
+    parser.add_argument('-d', '--description', help="String for the description of the story")
     parser.add_argument('-k', '--tags', help="List of CSV for the story tags")
-    thumbGroup.add_argument(
-        '-p',
-        '--thumbnail',
-        action='store_true',
-        help="Flag for whether a thumbnail is present and should be used")
+    thumbGroup.add_argument('-p', '--thumbnail', action='store_true',
+                            help="Flag for whether a thumbnail is present and should be used")
     parser.add_argument(
         '-s',
         '--post-script',
@@ -110,11 +87,7 @@ def initParser():
             'adult'],
         default='adult',
         help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
-    parser.add_argument(
-        '-w',
-        '--warning',
-        action='store_true',
-        help='Adds a content warning to the top of a story')
+    parser.add_argument('-w', '--warning', action='store_true', help='Adds a content warning to the top of a story')
 
     parser.add_argument(
         '-o',
@@ -125,6 +98,7 @@ def initParser():
         '--test',
         action='store_true',
         help='debugging flag; if included, the program will do everything but submit')
+    parser.add_argument('-O', '--outputdir', help='The output directory for any files to be saved to')
 
 
 def initSite(
@@ -167,6 +141,10 @@ def initSite(
 def main():
     initParser()
     args = parser.parse_args()
+
+    if not args.outputdir:
+        # if no directory is specified, use the directory with the story file
+        args.outputdir = args.directory
 
     if args.offline:
         print('Offline mode is active')
@@ -214,8 +192,7 @@ def main():
         if os.path.exists('post-script.txt'):
             print('Post-script found')
             with open('post-script.txt', 'r', encoding='utf-8') as post:
-                args.description = args.description + \
-                    '\n\n' + ''.join(post.readlines())
+                args.description = args.description + '\n\n' + ''.join(post.readlines())
         else:
             if args.ignore_errors:
                 print('Post-script file cannot be loaded!\nContinuing...')
@@ -228,6 +205,7 @@ def main():
         args.description,
         args.tags,
         args.rating)
+
     # determine file type to look for
     storyLoc = None
     args.format = args.format.lower()
@@ -238,11 +216,9 @@ def main():
     elif args.format == 'html':
         ends = ['.html']
 
-    for file, ending in (
-            (file, ending) for ending in ends for file in os.listdir(
-            args.directory)):
+    for file, ending in ((file, ending) for ending in ends for file in os.listdir(args.directory)):
         if file.endswith(ending):
-            storyLoc = os.path.join(args.directory, file)
+            storyLoc = pathlib.Path(args.directory, file)
             print('File found: {}'.format(storyLoc))
             break
     if storyLoc is None:
@@ -255,8 +231,7 @@ def main():
     if args.warning:
         with open('content-warning.txt', 'r') as file:
             warning = file.read()
-            submission.content = warning + '\n\n' + \
-                ('~' * 10) + '\n\n' + submission.content
+            submission.content = warning + '\n\n' + ('~' * 10) + '\n\n' + submission.content
 
     # get thumbnail
     if args.generate_thumbnail:
@@ -273,7 +248,7 @@ def main():
         if args.thumbnail:
             for file in os.listdir(args.directory):
                 if re.match('.*\\.(png|jpg)', file):
-                    thumbnailLoc = os.path.join(args.directory, file)
+                    thumbnailLoc = pathlib.Path(args.directory, file)
                     print('Thumbnail file found')
                     submission.loadThumbnail(open(thumbnailLoc, 'rb'))
                     break
@@ -284,32 +259,33 @@ def main():
                     raise Exception('No thumbnail file found!')
 
     # submit the files to each website
-    if args.offline:
+    storydest = pathlib.Path(args.outputdir, storyLoc.stem)
+
+    if args.offline or args.messy:
         setstage('writing')
         print('writing story files...')
-        with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
+
+        storydest = pathlib.Path(args.outputdir, storyLoc.stem)
+
+        with open(str(storydest) + 'bbcode.txt', 'w', encoding='utf-8') as file:
             file.write(submission.giveStory('bbcode').getvalue())
-        with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
+
+        with open(str(storydest) + '.md', 'w', encoding='utf-8') as file:
             file.write(submission.giveStory('markdown').getvalue())
-        print('writing description...')
-        with open(os.path.join(args.directory, 'description.txt'), 'w', encoding='utf-8') as file:
-            file.write(submission.giveDescription('bbcode'))
-        with open(os.path.join(args.directory, 'description.md'), 'w', encoding='utf-8') as file:
-            file.write(submission.giveDescription('markdown'))
+
         print('writing thumbnail...')
         if submission.thumbnail:
-            with open(os.path.join(args.directory, 'thumbnail.png'), 'wb') as file:
+            with open(os.path.join(args.outputdir, 'thumbnail.png'), 'wb') as file:
                 file.write(submission.giveThumbnail().getvalue())
-    else:
-        if args.messy:
-            print('Saving thumbnail to file...')
-            with open(os.path.join(args.directory, 'thumbnail.png'), 'wb') as file:
-                file.write(submission.giveThumbnail().getvalue())
-            with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
-                file.write(submission.giveStory('bbcode').getvalue())
-            with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
-                file.write(submission.giveStory('markdown').getvalue())
 
+        if args.messy is False and args.offline is True:
+            print('writing description...')
+            with open(os.path.join(args.outputdir, 'description.txt'), 'w', encoding='utf-8') as file:
+                file.write(submission.giveDescription('bbcode'))
+            with open(os.path.join(args.outputdir, 'description.md'), 'w', encoding='utf-8') as file:
+                file.write(submission.giveDescription('markdown'))
+
+    if args.offline is False:
         for site in sites:
             try:
                 setstage('posting')
