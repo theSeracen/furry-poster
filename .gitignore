@@ -483,3 +483,4 @@ dmypy.json
 *cookies.txt
 /post-script.txt
 *.txt
+.vscode/
