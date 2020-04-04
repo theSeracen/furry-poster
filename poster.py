@@ -144,11 +144,10 @@ def main():
 
     args.directory = pathlib.Path(args.directory)
 
-    if not args.outputdir:
-        # if no directory is specified, use the directory with the story file
-        args.outputdir = args.directory
-    else:
+    if args.outputdir:
         args.outputdir = pathlib.Path(args.outputdir)
+    else:
+        args.outputdir = args.directory
 
     if args.offline:
         print('Offline mode is active')
@@ -198,8 +197,8 @@ def main():
     if args.post_script:
         if os.path.exists('post-script.txt'):
             print('Post-script found')
-            with open('post-script.txt', 'r', encoding='utf-8') as post:
-                args.description = args.description + '\n\n' + ''.join(post.readlines())
+            with open('post-script.txt', 'r', encoding='utf-8') as postScriptFile:
+                args.description = args.description + '\n\n' + ''.join(postScriptFile.readlines())
         else:
             if args.ignore_errors:
                 print('Post-script file cannot be loaded!\nContinuing...')
@@ -221,11 +220,14 @@ def main():
     dirfiles = args.directory.iterdir()
     dirfiles = list(filter(lambda file: file.suffix in ends, dirfiles))
 
+    # find all of the story files in the folder directory
     if len(dirfiles) == 0:
         raise Exception('No story file of format {} found!'.format(args.format))
+
     elif len(dirfiles) == 1:
         storyLoc = dirfiles[0]
         print('File found: {}'.format(storyLoc))
+
     elif len(dirfiles) > 1:
         while True:
             print('Multiple story files found. Please select one:')
@@ -242,8 +244,8 @@ def main():
     submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
 
     if args.warning:
-        with open('content-warning.txt', 'r') as file:
-            warning = file.read()
+        with open('content-warning.txt', 'r') as warningFile:
+            warning = warningFile.read()
             submission.content = warning + '\n\n' + ('~' * 10) + '\n\n' + submission.content
 
     # get thumbnail
@@ -269,10 +271,12 @@ def main():
                     print('No thumbnail found!\nContinuing...')
                 else:
                     raise Exception('No thumbnail file found!')
+
             elif len(dirfiles) == 1:
                 thumbnailLoc = dirfiles[0]
                 print('File found: {}'.format(thumbnailLoc))
                 submission.loadThumbnail(open(thumbnailLoc, 'rb'))
+
             elif len(dirfiles) > 1:
                 while True:
                     print('Multiple thumbnail files found. Please select one:')
@@ -294,8 +298,6 @@ def main():
         setstage('writing')
         print('writing story files...')
 
-        storydest = pathlib.Path(args.outputdir, storyLoc.stem)
-
         with open(str(storydest) + 'bbcode.txt', 'w', encoding='utf-8') as file:
             file.write(submission.giveStory('bbcode').getvalue())
 
@@ -304,14 +306,14 @@ def main():
 
         print('writing thumbnail...')
         if submission.thumbnail:
-            with open(os.path.join(args.outputdir, 'thumbnail.png'), 'wb') as file:
+            with open(storydest.parent / 'thumbnail.png', 'wb') as file:
                 file.write(submission.giveThumbnail().getvalue())
 
         if args.messy is False and args.offline is True:
             print('writing description...')
-            with open(os.path.join(args.outputdir, 'description.txt'), 'w', encoding='utf-8') as file:
+            with open(storydest.parent / 'description.txt', 'w', encoding='utf-8') as file:
                 file.write(submission.giveDescription('bbcode'))
-            with open(os.path.join(args.outputdir, 'description.md'), 'w', encoding='utf-8') as file:
+            with open(storydest.parent / 'description.md', 'w', encoding='utf-8') as file:
                 file.write(submission.giveDescription('markdown'))
 
     if args.offline is False:
@@ -319,19 +321,20 @@ def main():
             try:
                 setstage('posting')
                 print('Beginning {} submission'.format(site.name))
+
                 if args.test:
                     print('test: {} bypassed'.format(site.name))
                 else:
                     site.submitStory(
-                        submission.title, submission.giveDescription(
-                            site.preferredFormat), submission.tags, args.rating, submission.giveStory(
+                        submission.title, submission.giveDescription(site.preferredFormat),
+                        submission.tags, args.rating, submission.giveStory(
                             site.preferredFormat), submission.giveThumbnail())
+
                 print('{} submission completed successfully'.format(site.name))
             except WebsiteError as e:
                 if args.ignore_errors:
                     print(
-                        '{} has failed with exception {}'.format(
-                            site.name, e))
+                        '{} has failed with exception {}'.format(site.name, e))
                 else:
                     raise
 
