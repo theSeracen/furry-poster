@@ -206,12 +206,7 @@ def main():
             else:
                 raise Exception('Post-script file cannot be found')
 
-    submission = Story(
-        args.format,
-        args.title,
-        args.description,
-        args.tags,
-        args.rating)
+    submission = Story(args.format, args.title, args.description, args.tags, args.rating)
 
     # determine file type to look for
     storyLoc = None
@@ -223,15 +218,26 @@ def main():
     elif args.format == 'html':
         ends = ['.html']
 
-    for file, ending in ((file, ending) for ending in ends for file in os.listdir(args.directory)):
-        if file.endswith(ending):
-            storyLoc = pathlib.Path(args.directory, file)
-            print('File found: {}'.format(storyLoc))
-            break
-    if storyLoc is None:
-        raise Exception(
-            'No story file of format {} found!'.format(
-                args.format))
+    dirfiles = args.directory.iterdir()
+    dirfiles = list(filter(lambda file: file.suffix in ends, dirfiles))
+
+    if len(dirfiles) == 0:
+        raise Exception('No story file of format {} found!'.format(args.format))
+    elif len(dirfiles) == 1:
+        storyLoc = dirfiles[0]
+        print('File found: {}'.format(storyLoc))
+    elif len(dirfiles) > 1:
+        while True:
+            print('Multiple story files found. Please select one:')
+            for pos, file in enumerate(dirfiles):
+                print('{}. {}'.format(pos + 1, file.name))
+
+            try:
+                choice = int(input('Please choose a file -> ')) - 1
+                storyLoc = dirfiles[choice]
+                break
+            except (ValueError, IndexError):
+                print('Invalid Selection!')
 
     submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
 
@@ -253,17 +259,33 @@ def main():
     else:
         thumbnailLoc = None
         if args.thumbnail:
-            for file in os.listdir(args.directory):
-                if re.match('.*\\.(png|jpg)', file):
-                    thumbnailLoc = pathlib.Path(args.directory, file)
-                    print('Thumbnail file found')
-                    submission.loadThumbnail(open(thumbnailLoc, 'rb'))
-                    break
-            if thumbnailLoc is None:
+
+            ends = ['png', 'jpg']
+            dirfiles = args.directory.iterdir()
+            dirfiles = list(filter(lambda file: file.suffix in ends, dirfiles))
+
+            if len(dirfiles) == 0:
                 if args.ignore_errors:
                     print('No thumbnail found!\nContinuing...')
                 else:
                     raise Exception('No thumbnail file found!')
+            elif len(dirfiles) == 1:
+                thumbnailLoc = dirfiles[0]
+                print('File found: {}'.format(thumbnailLoc))
+                submission.loadThumbnail(open(thumbnailLoc, 'rb'))
+            elif len(dirfiles) > 1:
+                while True:
+                    print('Multiple thumbnail files found. Please select one:')
+                    for pos, file in enumerate(dirfiles):
+                        print('{}. {}'.format(pos + 1, file.name))
+
+                    try:
+                        choice = int(input('Please choose a file -> ')) - 1
+                        thumbnailLoc = dirfiles[choice]
+                        submission.loadThumbnail(open(thumbnailLoc, 'rb'))
+                        break
+                    except (ValueError, IndexError):
+                        print('Invalid Selection!')
 
     # submit the files to each website
     storydest = pathlib.Path(args.outputdir, storyLoc.stem)
