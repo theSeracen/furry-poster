@@ -2,7 +2,7 @@
 
 from furryposter.websites.website import Website, AuthenticationError, WebsiteError
 from furryposter.utilities import markdownformatter
-from furryposter.story import *
+from furryposter.story import Story
 import bs4
 import io
 import re
