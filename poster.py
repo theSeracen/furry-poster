@@ -11,23 +11,8 @@ from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
 from furryposter.utilities.thumbnailgen import thumbnailerrors
 from furryposter.story import Story
+from stageprint import print, input, setstage
 import builtins
-
-stage = ''
-
-
-def print(inp: str): builtins.print(stage + inp)
-
-
-def setstage(newstage: str):
-    global stage
-    stage = '[{}]'.format(newstage).ljust(15)
-
-
-def getstage():
-    global stage
-    return stage
-
 
 setstage('init')
 parser = argparse.ArgumentParser(
