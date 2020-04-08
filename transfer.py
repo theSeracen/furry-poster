@@ -9,26 +9,13 @@ from furryposter.websites.website import Website
 import builtins
 import time
 from tqdm import tqdm
-
-stage = ''
-
-
-def print(inp: str): builtins.print(stage + inp)
-
-
-def setstage(newstage: str):
-    global stage
-    stage = '[{}]'.format(newstage).ljust(15)
-
-
-def getstage():
-    global stage
-    return stage
-
+from stageprint import print, input, setstage, stage
 
 parser = argparse.ArgumentParser(
     prog="furrytransfer",
     description="Transfer galleries between furry sites")
+
+
 setstage('init')
 
 
@@ -97,7 +84,7 @@ def main():
         raise Exception('Source and destination sites cannot be the same')
     if args.source == 'sofurry' and args.thumbnail_behaviour == 'source' and args.force is False:
         print('Default thumbnails are generated in all Sofurry submissions and these cannot be distinguished from uploaded thumbnails. Do you wish to continue with this in mind?')
-        response = input(getstage() + '(Yes/No): ')
+        response = input('(Yes/No): ')
         if 'n' in response.lower():
             print('Aborting...')
             exit(1)
@@ -116,7 +103,7 @@ def main():
                 args.name,
                 source.name,
                 dest.name))
-        response = input(getstage() + '(Yes/No): ')
+        response = input('(Yes/No): ')
         if 'n' in response.lower():
             print('Aborting...')
             exit(0)
@@ -133,13 +120,13 @@ def main():
     print('Processing source stories from {}'.format(source.name))
 
     sourceStories = []
-    for sub in tqdm(sourceSubmissions, getstage(), dynamic_ncols=True):
+    for sub in tqdm(sourceSubmissions, stage, dynamic_ncols=True):
         sourceStories.append(source.parseSubmission(sub))
     sourceStories = list(filter(None, sourceStories))
 
     print('Processing destination stories from {}'.format(dest.name))
     destStories = []
-    for sub in tqdm(destSubmissions, getstage(), dynamic_ncols=True):
+    for sub in tqdm(destSubmissions, stage, dynamic_ncols=True):
         destStories.append(dest.parseSubmission(sub))
     destStories = list(filter(None, destStories))
 
@@ -161,8 +148,8 @@ def main():
             elif args.thumbnail_behaviour == 'none':
                 story.thumbnail = None
 
-            print('Transferring {} of {} --- {}'.format(place + \
-                  1, len(sourceStories), story.title))
+            print('Transferring {} of {} --- {}'.format(place +
+                                                        1, len(sourceStories), story.title))
             if args.test is False:
                 dest.submitStory(
                     story.title, story.giveDescription(
