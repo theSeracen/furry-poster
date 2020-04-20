@@ -293,13 +293,12 @@ def main():
         if submission.thumbnail:
             with open(storydest.parent / 'thumbnail.png', 'wb') as file:
                 file.write(submission.giveThumbnail().getvalue())
-
-        if args.messy is False and args.offline is True:
-            print('writing description...')
-            with open(storydest.parent / 'description.txt', 'w', encoding='utf-8') as file:
-                file.write(submission.giveDescription('bbcode'))
-            with open(storydest.parent / 'description.md', 'w', encoding='utf-8') as file:
-                file.write(submission.giveDescription('markdown'))
+    
+        print('writing description...')
+        with open(storydest.parent / 'description.txt', 'w', encoding='utf-8') as file:
+            file.write(submission.giveDescription('bbcode'))
+        with open(storydest.parent / 'description.md', 'w', encoding='utf-8') as file:
+            file.write(submission.giveDescription('markdown'))
 
     if args.offline is False:
         for site in sites:
