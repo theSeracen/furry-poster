@@ -485,3 +485,4 @@ dmypy.json
 *.txt
 .vscode/
 real-post.sh
+*.swp
