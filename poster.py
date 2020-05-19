@@ -10,6 +10,7 @@ import http.cookiejar
 from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
 from furryposter.utilities.thumbnailgen import thumbnailerrors
+from furryposter.utilities.fileconcat import concatFiles
 from furryposter.story import Story
 from stageprint import print, input, setstage
 import builtins
@@ -84,6 +85,7 @@ def initParser():
         action='store_true',
         help='debugging flag; if included, the program will do everything but submit')
     parser.add_argument('-O', '--outputdir', help='The output directory for any files to be saved to')
+    parser.add_argument('-c', '--concatenate', action='store_true', help='concatenate all files found in folder')
 
 
 def initSite(
@@ -214,19 +216,27 @@ def main():
         print('File found: {}'.format(storyLoc))
 
     elif len(dirfiles) > 1:
-        while True:
-            print('Multiple story files found. Please select one:')
-            for pos, file in enumerate(dirfiles):
-                print('{}. {}'.format(pos + 1, file.name))
+        if args.concatenate:
+            dirfiles = [str(pathlib.PurePath(dirfile))
+                        for dirfile in dirfiles]
+            storyLoc = StringIO(concatFiles(dirfiles))
+        else:
+            while True:
+                print('Multiple story files found. Please select one:')
+                for pos, file in enumerate(dirfiles):
+                    print('{}. {}'.format(pos + 1, file.name))
 
-            try:
-                choice = int(input('Please choose a file -> ')) - 1
-                storyLoc = dirfiles[choice]
-                break
-            except (ValueError, IndexError):
-                print('Invalid Selection!')
+                try:
+                    choice = int(input('Please choose a file -> ')) - 1
+                    storyLoc = dirfiles[choice]
+                    break
+                except (ValueError, IndexError):
+                    print('Invalid Selection!')
 
-    submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
+    if isinstance(storyLoc, StringIO):
+        submission.loadContent(storyLoc)
+    else:
+        submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
 
     if args.warning:
         with open('content-warning.txt', 'r') as warningFile:
