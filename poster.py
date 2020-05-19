@@ -198,7 +198,7 @@ def main():
     if args.format == 'text' or args.format == 'bbcode':
         ends = ['.txt']
     elif args.format == 'markdown':
-        ends = ['.mmd', '.md']
+        ends = ['.mmd', '.md', '.stry']
     elif args.format == 'html':
         ends = ['.html']
 
@@ -293,7 +293,7 @@ def main():
         if submission.thumbnail:
             with open(storydest.parent / 'thumbnail.png', 'wb') as file:
                 file.write(submission.giveThumbnail().getvalue())
-    
+
         print('writing description...')
         with open(storydest.parent / 'description.txt', 'w', encoding='utf-8') as file:
             file.write(submission.giveDescription('bbcode'))
