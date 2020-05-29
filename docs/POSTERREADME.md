@@ -29,6 +29,7 @@ Flags in the following section are optional. Note that if flags for title, descr
 - `-k, --tags` -> tags or keys to accompany upload; must be comma-separated
 - `-p, --thumbnail` -> flag for whether to look for and then submit a thumbnail. Note that if this flag is set, and a thumbnail cannot be found, an error will occur. Mutually exclusive with `--generate-thumbnail`
 - `-g, --generate-thumbnail` -> Causes a thumbnail to be dynamically generated. The default profile is used in thumbnail.config unless specified
+- `-c, --concatenate` -> Causes all found files in the folder to be concatenated together
 - `-f, --format` -> source format for the story file
 
   - **`markdown`**
