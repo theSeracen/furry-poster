@@ -4,29 +4,16 @@ import argparse
 from furryposter.websites import sofurry, weasyl, furaffinity
 from furryposter.websites.website import AuthenticationError, WebsiteError, Website
 import os
+import pathlib
 import re
 import http.cookiejar
 from io import StringIO, TextIOWrapper, BufferedReader
 from typing import Optional
 from furryposter.utilities.thumbnailgen import thumbnailerrors
+from furryposter.utilities.fileconcat import concatFiles
 from furryposter.story import Story
+from stageprint import print, input, setstage
 import builtins
-
-stage = ''
-
-
-def print(inp: str): builtins.print(stage + inp)
-
-
-def setstage(newstage: str):
-    global stage
-    stage = '[{}]'.format(newstage).ljust(15)
-
-
-def getstage():
-    global stage
-    return stage
-
 
 setstage('init')
 parser = argparse.ArgumentParser(
@@ -37,11 +24,8 @@ parser = argparse.ArgumentParser(
 def initParser():
     thumbGroup = parser.add_mutually_exclusive_group()
     parser.add_argument('directory', metavar='D')
-    parser.add_argument(
-        '-i',
-        '--ignore-errors',
-        action='store_true',
-        help='Ignore all errors and continue with other sites')
+    parser.add_argument('-i', '--ignore-errors', action='store_true',
+                        help='Ignore all errors and continue with other sites')
     parser.add_argument(
         '-f',
         '--format',
@@ -66,37 +50,16 @@ def initParser():
         help='Flag causes a thumbnail to be dynamically generated. The default profile is used in thumbnail.config unless specified')
 
     # site flags
-    parser.add_argument(
-        '-F',
-        '--furaffinity',
-        action='store_true',
-        help="Flag for whether FurAffinity should be tried")
-    parser.add_argument(
-        '-S',
-        '--sofurry',
-        action='store_true',
-        help="Flag for whether SoFurry should be tried")
-    parser.add_argument(
-        '-W',
-        '--weasyl',
-        action='store_true',
-        help="Flag for whether Weasyl should be tried")
+    parser.add_argument('-F', '--furaffinity', action='store_true', help="Flag for whether FurAffinity should be tried")
+    parser.add_argument('-S', '--sofurry', action='store_true', help="Flag for whether SoFurry should be tried")
+    parser.add_argument('-W', '--weasyl', action='store_true', help="Flag for whether Weasyl should be tried")
 
     # story details
-    parser.add_argument(
-        '-t',
-        '--title',
-        help="String for the title of the story")
-    parser.add_argument(
-        '-d',
-        '--description',
-        help="String for the description of the story")
+    parser.add_argument('-t', '--title', help="String for the title of the story")
+    parser.add_argument('-d', '--description', help="String for the description of the story")
     parser.add_argument('-k', '--tags', help="List of CSV for the story tags")
-    thumbGroup.add_argument(
-        '-p',
-        '--thumbnail',
-        action='store_true',
-        help="Flag for whether a thumbnail is present and should be used")
+    thumbGroup.add_argument('-p', '--thumbnail', action='store_true',
+                            help="Flag for whether a thumbnail is present and should be used")
     parser.add_argument(
         '-s',
         '--post-script',
@@ -110,11 +73,7 @@ def initParser():
             'adult'],
         default='adult',
         help="Rating for the story; choice between 'general' and 'adult'; defaults to adult")
-    parser.add_argument(
-        '-w',
-        '--warning',
-        action='store_true',
-        help='Adds a content warning to the top of a story')
+    parser.add_argument('-w', '--warning', action='store_true', help='Adds a content warning to the top of a story')
 
     parser.add_argument(
         '-o',
@@ -125,6 +84,8 @@ def initParser():
         '--test',
         action='store_true',
         help='debugging flag; if included, the program will do everything but submit')
+    parser.add_argument('-O', '--outputdir', help='The output directory for any files to be saved to')
+    parser.add_argument('-c', '--concatenate', action='store_true', help='concatenate all files found in folder')
 
 
 def initSite(
@@ -168,6 +129,13 @@ def main():
     initParser()
     args = parser.parse_args()
 
+    args.directory = pathlib.Path(args.directory)
+
+    if args.outputdir:
+        args.outputdir = pathlib.Path(args.outputdir)
+    else:
+        args.outputdir = args.directory
+
     if args.offline:
         print('Offline mode is active')
     else:
@@ -189,8 +157,11 @@ def main():
     setstage('loading')
 
     # now we can go into checking for all the required items
-    if os.path.isdir(args.directory) is False:
+    if args.directory.is_dir() is False:
         raise Exception("Valid directory required")
+
+    if args.outputdir.is_dir() is False:
+        raise Exception("Valid output directory required")
 
     if args.title is None:
         args.title = input('Please enter a title: ')
@@ -213,59 +184,69 @@ def main():
     if args.post_script:
         if os.path.exists('post-script.txt'):
             print('Post-script found')
-            with open('post-script.txt', 'r', encoding='utf-8') as post:
-                args.description = args.description + \
-                    '\n\n' + ''.join(post.readlines())
+            with open('post-script.txt', 'r', encoding='utf-8') as postScriptFile:
+                args.description = args.description + '\n\n' + ''.join(postScriptFile.readlines())
         else:
             if args.ignore_errors:
                 print('Post-script file cannot be loaded!\nContinuing...')
             else:
                 raise Exception('Post-script file cannot be found')
 
-    submission = Story(
-        args.format,
-        args.title,
-        args.description,
-        args.tags,
-        args.rating)
+    submission = Story(args.format, args.title, args.description, args.tags, args.rating)
+
     # determine file type to look for
     storyLoc = None
     args.format = args.format.lower()
     if args.format == 'text' or args.format == 'bbcode':
         ends = ['.txt']
     elif args.format == 'markdown':
-        ends = ['.mmd', '.md']
+        ends = ['.mmd', '.md', '.stry']
     elif args.format == 'html':
         ends = ['.html']
 
-    for file, ending in (
-            (file, ending) for ending in ends for file in os.listdir(
-            args.directory)):
-        if file.endswith(ending):
-            storyLoc = os.path.join(args.directory, file)
-            print('File found: {}'.format(storyLoc))
-            break
-    if storyLoc is None:
-        raise Exception(
-            'No story file of format {} found!'.format(
-                args.format))
+    dirfiles = args.directory.iterdir()
+    dirfiles = list(filter(lambda file: file.suffix in ends, dirfiles))
 
-    submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
+    # find all of the story files in the folder directory
+    if len(dirfiles) == 0:
+        raise Exception('No story file of format {} found!'.format(args.format))
+
+    elif len(dirfiles) == 1:
+        storyLoc = dirfiles[0]
+        print('File found: {}'.format(storyLoc))
+
+    elif len(dirfiles) > 1:
+        if args.concatenate:
+            dirfiles = [str(pathlib.PurePath(dirfile))
+                        for dirfile in dirfiles]
+            storyLoc = StringIO(concatFiles(dirfiles))
+        else:
+            while True:
+                print('Multiple story files found. Please select one:')
+                for pos, file in enumerate(dirfiles):
+                    print('{}. {}'.format(pos + 1, file.name))
+
+                try:
+                    choice = int(input('Please choose a file -> ')) - 1
+                    storyLoc = dirfiles[choice]
+                    break
+                except (ValueError, IndexError):
+                    print('Invalid Selection!')
+
+    if isinstance(storyLoc, StringIO):
+        submission.loadContent(storyLoc)
+    else:
+        submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
 
     if args.warning:
-        with open('content-warning.txt', 'r') as file:
-            warning = file.read()
-            submission.content = warning + '\n\n' + \
-                ('~' * 10) + '\n\n' + submission.content
+        with open('content-warning.txt', 'r') as warningFile:
+            warning = warningFile.read()
+            submission.content = warning + '\n\n' + ('~' * 10) + '\n\n' + submission.content
 
     # get thumbnail
     if args.generate_thumbnail:
         try:
             submission.loadThumbnail(args.generate_thumbnail)
-            if args.messy:
-                print('Saving thumbnail to file...')
-                with open(os.path.join(args.directory, 'thumbnail.png'), 'wb') as file:
-                    file.write(submission.giveThumbnail().getvalue())
         except thumbnailerrors.ThumbnailSizingError:
             if args.ignore_errors:
                 print('Thumbnail generation has failed!')
@@ -275,60 +256,79 @@ def main():
     else:
         thumbnailLoc = None
         if args.thumbnail:
-            for file in os.listdir(args.directory):
-                if re.match('.*\\.(png|jpg)', file):
-                    thumbnailLoc = os.path.join(args.directory, file)
-                    print('Thumbnail file found')
-                    submission.loadThumbnail(open(thumbnailLoc, 'rb'))
-                    break
-            if thumbnailLoc is None:
+
+            ends = ['png', 'jpg']
+            dirfiles = args.directory.iterdir()
+            dirfiles = list(filter(lambda file: file.suffix in ends, dirfiles))
+
+            if len(dirfiles) == 0:
                 if args.ignore_errors:
                     print('No thumbnail found!\nContinuing...')
                 else:
                     raise Exception('No thumbnail file found!')
 
+            elif len(dirfiles) == 1:
+                thumbnailLoc = dirfiles[0]
+                print('File found: {}'.format(thumbnailLoc))
+                submission.loadThumbnail(open(thumbnailLoc, 'rb'))
+
+            elif len(dirfiles) > 1:
+                while True:
+                    print('Multiple thumbnail files found. Please select one:')
+                    for pos, file in enumerate(dirfiles):
+                        print('{}. {}'.format(pos + 1, file.name))
+
+                    try:
+                        choice = int(input('Please choose a file -> ')) - 1
+                        thumbnailLoc = dirfiles[choice]
+                        submission.loadThumbnail(open(thumbnailLoc, 'rb'))
+                        break
+                    except (ValueError, IndexError):
+                        print('Invalid Selection!')
+
     # submit the files to each website
-    if args.offline:
+    storydest = pathlib.Path(args.outputdir, storyLoc.stem)
+
+    if args.offline or args.messy:
         setstage('writing')
         print('writing story files...')
-        with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
+
+        with open(str(storydest) + 'bbcode.txt', 'w', encoding='utf-8') as file:
             file.write(submission.giveStory('bbcode').getvalue())
-        with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
+
+        with open(str(storydest) + '.md', 'w', encoding='utf-8') as file:
             file.write(submission.giveStory('markdown').getvalue())
-        print('writing description...')
-        with open(os.path.join(args.directory, 'description.txt'), 'w', encoding='utf-8') as file:
-            file.write(submission.giveDescription('bbcode'))
-        with open(os.path.join(args.directory, 'description.md'), 'w', encoding='utf-8') as file:
-            file.write(submission.giveDescription('markdown'))
+
         print('writing thumbnail...')
         if submission.thumbnail:
-            with open(os.path.join(args.directory, 'thumbnail.png'), 'wb') as file:
+            with open(storydest.parent / 'thumbnail.png', 'wb') as file:
                 file.write(submission.giveThumbnail().getvalue())
-    else:
+
+        print('writing description...')
+        with open(storydest.parent / 'description.txt', 'w', encoding='utf-8') as file:
+            file.write(submission.giveDescription('bbcode'))
+        with open(storydest.parent / 'description.md', 'w', encoding='utf-8') as file:
+            file.write(submission.giveDescription('markdown'))
+
+    if args.offline is False:
         for site in sites:
-            if args.messy:
-                if site.preferredFormat == 'bbcode':
-                    with open(''.join(storyLoc.split('.')[:-1]) + 'bbcode.txt', 'w', encoding='utf-8') as file:
-                        file.write(submission.giveStory('bbcode').getvalue())
-                elif site.preferredFormat == 'markdown':
-                    with open(''.join(storyLoc.split('.')[:-1]) + '.md', 'w', encoding='utf-8') as file:
-                        file.write(submission.giveStory('markdown').getvalue())
             try:
                 setstage('posting')
                 print('Beginning {} submission'.format(site.name))
+
                 if args.test:
                     print('test: {} bypassed'.format(site.name))
                 else:
                     site.submitStory(
-                        submission.title, submission.giveDescription(
-                            site.preferredFormat), submission.tags, args.rating, submission.giveStory(
+                        submission.title, submission.giveDescription(site.preferredFormat),
+                        submission.tags, args.rating, submission.giveStory(
                             site.preferredFormat), submission.giveThumbnail())
+
                 print('{} submission completed successfully'.format(site.name))
             except WebsiteError as e:
                 if args.ignore_errors:
                     print(
-                        '{} has failed with exception {}'.format(
-                            site.name, e))
+                        '{} has failed with exception {}'.format(site.name, e))
                 else:
                     raise
 
