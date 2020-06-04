@@ -287,7 +287,11 @@ def main():
                         print('Invalid Selection!')
 
     # submit the files to each website
-    storydest = pathlib.Path(args.outputdir, storyLoc.stem)
+    try:
+        storydest = pathlib.Path(args.outputdir, storyLoc.stem)
+    except AttributeError:
+        storydest = pathlib.Path(args.outputdir, 'story')
+
 
     if args.offline or args.messy:
         setstage('writing')
