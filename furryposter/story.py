@@ -1,7 +1,9 @@
 """Module with a class that represents a story and associated methods"""
-from typing import TextIO, BinaryIO
 import io
-from furryposter.utilities import bbcodeformatter, markdownformatter, htmlformatter
+from typing import BinaryIO, TextIO
+
+from furryposter.utilities import (bbcodeformatter, htmlformatter,
+                                   markdownformatter)
 from furryposter.utilities.thumbnailgen import thumbnailgeneration
 
 

@@ -1,14 +1,17 @@
 """Module for SoFurry and an interface for posting stories to it"""
 
-from furryposter.websites.website import Website, WebsiteError, AuthenticationError
-import requests
-import bs4
 import http.cookiejar
-import re
-import json
 import io
+import json
+import re
+from typing import BinaryIO, Dict, List, TextIO
+
+import bs4
+import requests
+
 from furryposter.story import Story
-from typing import TextIO, BinaryIO, List, Dict
+from furryposter.websites.website import (AuthenticationError, Website,
+                                          WebsiteError)
 
 
 class SoFurry(Website):

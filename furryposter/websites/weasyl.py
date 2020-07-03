@@ -1,13 +1,16 @@
 """Module for Weasyl support"""
-from furryposter.websites.website import Website, WebsiteError, AuthenticationError
-import requests
-import io
-import bs4
-import json
 import http.cookiejar
+import io
+import json
 import re
-from typing import TextIO, BinaryIO, List, Dict
+from typing import BinaryIO, Dict, List, TextIO
+
+import bs4
+import requests
+
 from furryposter.story import Story
+from furryposter.websites.website import (AuthenticationError, Website,
+                                          WebsiteError)
 
 
 class Weasyl(Website):

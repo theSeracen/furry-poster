@@ -1,14 +1,17 @@
 """Module for FurAffinity and an interface for posting stories to it"""
 
-from furryposter.websites.website import Website, AuthenticationError, WebsiteError
-from furryposter.utilities import markdownformatter
-from furryposter.story import Story
-import bs4
+import http.cookiejar
 import io
 import re
+from typing import BinaryIO, List, Optional, TextIO
+
+import bs4
 import requests
-import http.cookiejar
-from typing import TextIO, BinaryIO, List, Optional
+
+from furryposter.story import Story
+from furryposter.utilities import markdownformatter
+from furryposter.websites.website import (AuthenticationError, Website,
+                                          WebsiteError)
 
 
 class FurAffinity(Website):

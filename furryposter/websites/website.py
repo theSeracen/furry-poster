@@ -1,9 +1,10 @@
 """Contains abstract Website class for creating proper website interfaces to a real website, with errors for module/website related issues"""
 
-from abc import ABC, abstractmethod
-from typing import TextIO, BinaryIO, Dict, List
-from furryposter.story import Story
 import http.cookiejar
+from abc import ABC, abstractmethod
+from typing import BinaryIO, Dict, List, TextIO
+
+from furryposter.story import Story
 
 
 class WebsiteError(Exception):

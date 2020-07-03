@@ -1,4 +1,5 @@
 import unittest
+
 from furryposter.utilities import markdownformatter
 
 

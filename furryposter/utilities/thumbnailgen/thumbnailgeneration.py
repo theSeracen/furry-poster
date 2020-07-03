@@ -1,8 +1,11 @@
 import configparser
-from PIL import Image, ImageDraw, ImageFont
-from typing import List, Tuple
 from io import BytesIO
-from furryposter.utilities.thumbnailgen.thumbnailerrors import *
+from typing import List, Tuple
+
+from PIL import Image, ImageDraw, ImageFont
+
+from furryposter.utilities.thumbnailgen.thumbnailerrors import (
+    ThumbnailError, ThumbnailSizingError)
 
 configs = None
 

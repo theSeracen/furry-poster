@@ -1,6 +1,8 @@
-from furryposter.utilities import htmlformatter
 import unittest
+
 from bs4 import BeautifulSoup
+
+from furryposter.utilities import htmlformatter
 
 
 class TestHTMLFormatting(unittest.TestCase):

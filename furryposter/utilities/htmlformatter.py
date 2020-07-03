@@ -1,9 +1,10 @@
 """
 Module for converting HTML story files to markdown-formatted text as used on FA and other sites
 """
-import bs4
 import os
-from typing import TextIO, List
+from typing import List, TextIO
+
+import bs4
 
 
 def parseStringBBcode(line: str) -> str:
