@@ -61,13 +61,9 @@ def formatFileBBcode(htmlfile: TextIO) -> List[str]:
 
     # build list of formatted strings, centring if necessary
     story = [
-        ("[center]" +
-         parseStringBBcode(paragraph) +
-         "[/center]" +
-         '\n\n') if (
+        ("[center]" + parseStringBBcode(paragraph) + "[/center]" + '\n\n') if (
             'align' in paragraph.attrs) else (
-            parseStringBBcode(paragraph) +
-            '\n\n') for paragraph in paragraphs]
+            parseStringBBcode(paragraph) + '\n\n') for paragraph in paragraphs]
 
     return story
 
@@ -78,14 +74,9 @@ def formatFileMarkdown(htmlfile: TextIO) -> List[str]:
     paragraphs = page.findAll('p')
 
     # build list of formatted strings, centring if necessary
-    story = [
-        ("[center]" +
-         parseStringMarkdown(paragraph) +
-         "[/center]" +
-         '\n\n') if (
-            'align' in paragraph.attrs) else (
-            parseStringMarkdown(paragraph) +
-            '\n\n') for paragraph in paragraphs]
+    story = [("[center]" + parseStringMarkdown(paragraph) + "[/center]" + '\n\n') if (
+        'align' in paragraph.attrs) else (
+        parseStringMarkdown(paragraph) + '\n\n') for paragraph in paragraphs]
     return story
 
 

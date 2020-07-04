@@ -115,9 +115,7 @@ class Weasyl(Website):
     def parseSubmission(self, js: Dict) -> Story:
         sub = json.loads(
             requests.get(
-                'http://weasyl.com/api/submissions/{}/view'.format(
-                    js['submitid']),
-                cookies=self.cookie).content)
+                'http://weasyl.com/api/submissions/{}/view'.format(js['submitid']), cookies=self.cookie).content)
         title = js['title']
         description = self.__parseDescription(sub['description'])
         tags = ', '.join(sub['tags'])

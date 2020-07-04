@@ -16,11 +16,7 @@ class AuthenticationError(WebsiteError):
 
 
 class Website(ABC):
-    def __init__(self,
-                 name: str,
-                 ratings: Dict[str,
-                               int],
-                 preferredFormat: str = 'markdown'):
+    def __init__(self, name: str, ratings: Dict[str, int], preferredFormat: str = 'markdown'):
         self.name = name
         self.preferredFormat = preferredFormat
         self.ratings = ratings
@@ -83,10 +79,5 @@ class Website(ABC):
             title,
             description,
             tags,
-            open(
-                story,
-                'r',
-                encoding='utf-8'),
-            open(
-                thumbnail,
-                'rb'))
+            open(story, 'r', encoding='utf-8'),
+            open(thumbnail, 'rb'))

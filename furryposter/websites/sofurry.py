@@ -77,20 +77,14 @@ class SoFurry(Website):
         s.cookies = self.cookie
 
         user = json.loads(
-            s.get(
-                'http://api2.sofurry.com/std/getUserProfile',
-                params={
-                    'username': user}).content)
+            s.get('http://api2.sofurry.com/std/getUserProfile', params={'username': user}).content)
         page = 1
         subs = []
         while True:
             js = json.loads(
                 s.get(
-                    'https://api2.sofurry.com/browse/user/stories?uid={}&format=json&&stories-page={}'.format(
-                        user['userID'],
-                        page),
-                    params={
-                        'from': 'all time'}).content)
+                    'https://api2.sofurry.com/browse/user/stories?uid={}&format=json&&stories-page={}'.format(user['userID'], page),
+                    params={'from': 'all time'}).content)
             subs.extend(js['items'])
             if len(js['items']) < 30:
                 break

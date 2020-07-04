@@ -56,13 +56,12 @@ class FurAffinity(Website):
             uploadFiles = {'submission': story, 'thumbnail': thumbnail}
         else:
             uploadFiles = {'submission': story}
-        page = s.post(
-            'http://www.furaffinity.net/submit/story/4',
-            data={
-                'part': '3',
-                'key': key,
-                'submission_type': 'story'},
-            files=uploadFiles)
+        page = s.post('http://www.furaffinity.net/submit/story/4',
+                      data={
+                          'part': '3',
+                          'key': key,
+                          'submission_type': 'story'},
+                      files=uploadFiles)
 
         if 'Uploaded file has a filesize of 0 bytes' in page.text:
             raise WebsiteError('One of the uploaded files read as 0 bytes')
@@ -173,8 +172,7 @@ class FurAffinity(Website):
         story = Story('bbcode', title, description, tags, rating)
 
         thumbnail = soup.find(
-            'img', {
-                'data-fullview-src': re.compile(r'//d.facdn.net/.*\.thumbnail\..*')}).get('data-fullview-src')
+            'img', {'data-fullview-src': re.compile(r'//d.facdn.net/.*\.thumbnail\..*')}).get('data-fullview-src')
         story.content = source
         if thumbnail is not None:
             story.loadThumbnail('default', io.BytesIO(

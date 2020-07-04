@@ -36,8 +36,7 @@ def __boldBBcodetoMarkdown(line: str) -> str:
 
 def __doubleNewLines(line: str) -> str:
     """Doubles the new lines in the document, if there is not already a blank line between each paragraph"""
-    # number 5 is completely abitrary; just need to find if there's more than
-    # 5 empty lines
+    # number 5 is completely abitrary; just need to find if there's more than 5 empty lines
     if len(re.findall(r'\n\n', line)) >= 5:
         return line
     else:
@@ -48,31 +47,15 @@ def __linksBBBcodetoMarkdown(line: str) -> str:
     simplePattern = r'\[URL\](.*?)\[/URL\]'
     complexPattern = r'\[URL=(.*?)\](.*?)\[/URL\]'
     subs = []
-    for match in re.findall(
-            r'(({})|({}))'.format(
-                simplePattern,
-                complexPattern),
-            line):
+    for match in re.findall(r'(({})|({}))'.format(simplePattern, complexPattern), line):
         match = match[0]
         if re.search(complexPattern, match):
             link = re.search(complexPattern, match)
-            subs.append(
-                (re.sub(
-                    complexPattern,
-                    '[' + link.group(2) + '](' + link.group(1) + ')',
-                    match),
-                    match))
+            subs.append((re.sub(complexPattern, '[' + link.group(2) + '](' + link.group(1) + ')', match), match))
 
         elif re.search(simplePattern, match):
             link = re.search(simplePattern, match)
-            subs.append(
-                (re.sub(
-                    simplePattern,
-                    '<' +
-                    link.group(1) +
-                    '>',
-                    match),
-                    match))
+            subs.append((re.sub(simplePattern, '<' + link.group(1) + '>', match), match))
 
     for (new, old) in subs:
         line = line.replace(old, new)

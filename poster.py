@@ -86,10 +86,7 @@ def initParser():
     parser.add_argument('-c', '--concatenate', action='store_true', help='concatenate all files found in folder')
 
 
-def initSite(
-        regexString: str,
-        site: Website,
-        ignore_errors: bool) -> Optional[Website]:
+def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[Website]:
     """Initialise site with cookies"""
 
     cookiesLoc = None
@@ -99,22 +96,16 @@ def initSite(
             break
     if cookiesLoc is None:
         if ignore_errors is False:
-            raise AuthenticationError(
-                '{} cannot find a cookies file'.format(
-                    site.name))
+            raise AuthenticationError('{} cannot find a cookies file'.format(site.name))
         else:
-            print(
-                '{} cannot find cookies; the site will be skipped'.format(
-                    site.name))
+            print('{} cannot find cookies; the site will be skipped'.format(site.name))
     else:
         site.load(cookiesLoc)
         try:
             site.testAuthentication()
         except AuthenticationError:
             if ignore_errors is True:
-                print(
-                    '{} authentication failed!\nContinuing...'.format(
-                        site.name))
+                print('{} authentication failed!\nContinuing...'.format(site.name))
             else:
                 raise
         else:
@@ -213,8 +204,7 @@ def main():
 
     elif len(dirfiles) > 1:
         if args.concatenate:
-            dirfiles = [str(pathlib.PurePath(dirfile))
-                        for dirfile in dirfiles]
+            dirfiles = [str(pathlib.PurePath(dirfile)) for dirfile in dirfiles]
             storyLoc = StringIO(concatFiles(dirfiles))
         else:
             while True:
@@ -317,15 +307,14 @@ def main():
                     print('test: {} bypassed'.format(site.name))
                 else:
                     site.submitStory(
-                        submission.title, submission.giveDescription(site.preferredFormat),
-                        submission.tags, args.rating, submission.giveStory(
+                        submission.title, submission.giveDescription(
+                            site.preferredFormat), submission.tags, args.rating, submission.giveStory(
                             site.preferredFormat), submission.giveThumbnail())
 
                 print('{} submission completed successfully'.format(site.name))
             except WebsiteError as e:
                 if args.ignore_errors:
-                    print(
-                        '{} has failed with exception {}'.format(site.name, e))
+                    print('{} has failed with exception {}'.format(site.name, e))
                 else:
                     raise
 

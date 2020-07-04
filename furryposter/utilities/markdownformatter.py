@@ -41,27 +41,11 @@ def __linkMarkdowntoBBcode(line: str) -> str:
         # first format for links
         if re.search(simple, match):
             link = re.search(simple, match)
-            subs.append(
-                (re.sub(
-                    simple,
-                    '[URL=' +
-                    link.group(2) +
-                    ']' +
-                    link.group(1) +
-                    '[/URL]',
-                    match),
-                    match))
+            subs.append((re.sub(simple, '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]', match), match))
         # second format for links
         elif re.search(complex, match):
             link = re.search(complex, match)
-            subs.append(
-                (re.sub(
-                    complex,
-                    '[URL]' +
-                    link.group(1) +
-                    '[/URL]',
-                    match),
-                    match))
+            subs.append((re.sub(complex, '[URL]' + link.group(1) + '[/URL]', match), match))
 
     for (new, old) in subs:
         line = line.replace(old, new)
