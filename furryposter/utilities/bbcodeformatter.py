@@ -46,18 +46,21 @@ def __doubleNewLines(line: str) -> str:
 def __linksBBBcodetoMarkdown(line: str) -> str:
     simplePattern = r'\[URL\](.*?)\[/URL\]'
     complexPattern = r'\[URL=(.*?)\](.*?)\[/URL\]'
-    subs = []
+    substitutions = []
+
     for match in re.findall(r'(({})|({}))'.format(simplePattern, complexPattern), line):
         match = match[0]
         if re.search(complexPattern, match):
             link = re.search(complexPattern, match)
-            subs.append((re.sub(complexPattern, '[' + link.group(2) + '](' + link.group(1) + ')', match), match))
+            substitutions.append(
+                (re.sub(complexPattern, '[' + link.group(2) + '](' + link.group(1) + ')', match),
+                 match))
 
         elif re.search(simplePattern, match):
             link = re.search(simplePattern, match)
-            subs.append((re.sub(simplePattern, '<' + link.group(1) + '>', match), match))
+            substitutions.append((re.sub(simplePattern, '<' + link.group(1) + '>', match), match))
 
-    for (new, old) in subs:
+    for (new, old) in substitutions:
         line = line.replace(old, new)
     return line
 

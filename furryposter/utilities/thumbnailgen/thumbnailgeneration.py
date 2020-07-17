@@ -15,8 +15,7 @@ def __createBase() -> Image:
     backcolour = tuple((int(val) for val in configs.get('backcolour').split(', ')))
     base = Image.new(
         'RGB',
-        (configs.getint('width'),
-         configs.getint('height')),
+        (configs.getint('width'), configs.getint('height')),
         backcolour)
     return base
 

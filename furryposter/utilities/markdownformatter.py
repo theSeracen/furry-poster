@@ -7,10 +7,10 @@ import re
 def findFiles(directory: str):
     files = os.listdir(directory)
     # create list of all markdown files in directory
-    markdowns = [(directory + '\\' + file)
-                 for file in files if file.endswith('.mmd')]
-    for markdownfile in markdowns:
-        formatFileBBcode(markdownfile)
+    markdown_files = [(directory + '\\' + file)
+                      for file in files if file.endswith('.mmd')]
+    for md_file in markdown_files:
+        formatFileBBcode(md_file)
 
 
 def checkMarkdown(line: str) -> str:
@@ -33,29 +33,30 @@ def parseStringBBcode(line: str) -> str:
 
 
 def __linkMarkdowntoBBcode(line: str) -> str:
-    simple = r'\[(.*?)\]\(((http|www)?.*?)\)'
-    complex = r'<(.*?)>'
-    subs = []
-    for match in re.findall(r'(({})|({}))'.format(simple, complex), line):
+    simple_pattern = r'\[(.*?)\]\(((http|www)?.*?)\)'
+    complex_pattern = r'<(.*?)>'
+    substitutions = []
+
+    for match in re.findall(r'(({})|({}))'.format(simple_pattern, complex_pattern), line):
         match = match[0]
         # first format for links
-        if re.search(simple, match):
-            link = re.search(simple, match)
-            subs.append((re.sub(simple, '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]', match), match))
+        if re.search(simple_pattern, match):
+            link = re.search(simple_pattern, match)
+            substitutions.append(
+                (re.sub(simple_pattern, '[URL=' + link.group(2) + ']' + link.group(1) + '[/URL]', match), match))
         # second format for links
-        elif re.search(complex, match):
-            link = re.search(complex, match)
-            subs.append((re.sub(complex, '[URL]' + link.group(1) + '[/URL]', match), match))
+        elif re.search(complex_pattern, match):
+            link = re.search(complex_pattern, match)
+            substitutions.append((re.sub(complex_pattern, '[URL]' + link.group(1) + '[/URL]', match), match))
 
-    for (new, old) in subs:
+    for (new, old) in substitutions:
         line = line.replace(old, new)
     return line
 
 
 def __doubleNewLines(line: str) -> str:
     """Doubles the new lines in the document, if there is not already a blank line between each paragraph"""
-    # number 5 is completely abitrary; just need to find if there's more than
-    # 5 empty lines
+    # number 5 is completely abitrary
     if len(re.findall(r'\n\n', line)) >= 5:
         return line
     else:
@@ -78,11 +79,9 @@ def __strongMarkdowntoBBcode(line: str) -> str:
     strongParts = re.split(r'(\*{3,3}.+?\*{3,3})', line)
     for part in range(len(strongParts)):
         if strongParts[part - 1].startswith('***'):
-            strongParts[part - 1] = '[B][I]' + \
-                strongParts[part - 1].lstrip('***')
+            strongParts[part - 1] = '[B][I]' + strongParts[part - 1].lstrip('***')
         if strongParts[part - 1].endswith('***'):
-            strongParts[part - 1] = strongParts[part -
-                                                1].rstrip('***') + '[/I][/B]'
+            strongParts[part - 1] = strongParts[part - 1].rstrip('***') + '[/I][/B]'
     return ''.join(strongParts)
 
 
