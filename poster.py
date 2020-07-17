@@ -12,10 +12,8 @@ from typing import Optional
 from furryposter.utilities.thumbnailgen import thumbnailerrors
 from furryposter.utilities.fileconcat import concatFiles
 from furryposter.story import Story
-from stageprint import print, input, setstage
 import builtins
 
-setstage('init')
 parser = argparse.ArgumentParser(
     prog="furrystoryuploader",
     description="Post stories to furry websites")
@@ -154,8 +152,6 @@ def main():
 
         sites = filter(None, sites)
 
-    setstage('loading')
-
     # now we can go into checking for all the required items
     if args.directory.is_dir() is False:
         raise Exception("Valid directory required")
@@ -292,9 +288,7 @@ def main():
     except AttributeError:
         storydest = pathlib.Path(args.outputdir, 'story')
 
-
     if args.offline or args.messy:
-        setstage('writing')
         print('writing story files...')
 
         with open(str(storydest) + 'bbcode.txt', 'w', encoding='utf-8') as file:
@@ -317,7 +311,6 @@ def main():
     if args.offline is False:
         for site in sites:
             try:
-                setstage('posting')
                 print('Beginning {} submission'.format(site.name))
 
                 if args.test:

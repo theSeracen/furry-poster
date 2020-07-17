@@ -9,14 +9,10 @@ from furryposter.websites.website import Website
 import builtins
 import time
 from tqdm import tqdm
-from stageprint import print, input, setstage, stage
 
 parser = argparse.ArgumentParser(
     prog="furrytransfer",
     description="Transfer galleries between furry sites")
-
-
-setstage('init')
 
 
 def initParser():
@@ -108,7 +104,6 @@ def main():
             print('Aborting...')
             exit(0)
 
-    setstage('scanning')
     sourceSubmissions = source.crawlGallery(args.name)
     print('{} submissions in source gallery found'.format(len(sourceSubmissions)))
     destSubmissions = dest.crawlGallery(args.name)
@@ -116,21 +111,19 @@ def main():
         '{} submissions already in destination gallery'.format(
             len(destSubmissions)))
 
-    setstage('processing')
     print('Processing source stories from {}'.format(source.name))
 
     sourceStories = []
-    for sub in tqdm(sourceSubmissions, stage, dynamic_ncols=True):
+    for sub in tqdm(sourceSubmissions, dynamic_ncols=True):
         sourceStories.append(source.parseSubmission(sub))
     sourceStories = list(filter(None, sourceStories))
 
     print('Processing destination stories from {}'.format(dest.name))
     destStories = []
-    for sub in tqdm(destSubmissions, stage, dynamic_ncols=True):
+    for sub in tqdm(destSubmissions, dynamic_ncols=True):
         destStories.append(dest.parseSubmission(sub))
     destStories = list(filter(None, destStories))
 
-    setstage('transfer')
     print('{} Stories to be transferred'.format(len(sourceStories)))
     destTitles = [story.title for story in destStories]
 
@@ -164,7 +157,6 @@ def main():
 
             time.sleep(args.delay)
 
-    setstage('complete')
     print('Transfer successfully completed')
     print('{} stories transferred'.format(postCount))
 
