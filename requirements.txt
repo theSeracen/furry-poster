@@ -2,4 +2,4 @@
 requests
 bs4
 tqdm
-stageprint
+pillow
