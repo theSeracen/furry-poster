@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
+import builtins
 import os
 import re
+import time
+
+from tqdm import tqdm
+
 from furryposter.story import Story
 from furryposter.websites import furaffinity, sofurry, weasyl
 from furryposter.websites.website import Website
-import builtins
-import time
-from tqdm import tqdm
 
 parser = argparse.ArgumentParser(
     prog="furrytransfer",
@@ -16,66 +18,42 @@ parser = argparse.ArgumentParser(
 
 
 def initParser():
-    parser.add_argument(
-        'source',
-        metavar='S',
-        choices=[
-            'furaffinity',
-            'sofurry',
-            'weasyl'],
-        help='site with gallery')
-    parser.add_argument(
-        'destination',
-        metavar='D',
-        choices=[
-            'furaffinity',
-            'sofurry',
-            'weasyl'],
-        help='site to transfer to')
-    parser.add_argument(
-        'name',
-        metavar='N',
-        help='the name of the user to copy the gallery from')
+    parser.add_argument('source', metavar='S',
+                        choices=[
+                            'furaffinity',
+                            'sofurry',
+                            'weasyl'],
+                        help='site with gallery')
+    parser.add_argument('destination', metavar='D',
+                        choices=[
+                            'furaffinity',
+                            'sofurry',
+                            'weasyl'],
+                        help='site to transfer to')
+    parser.add_argument('name', metavar='N', help='the name of the user to copy the gallery from')
 
-    parser.add_argument(
-        '-d',
-        '--delay',
-        type=int,
-        default=5,
-        help='seconds between posts to new site')
-    parser.add_argument(
-        '-t',
-        '--thumbnail-behaviour',
-        choices=[
-            'new',
-            'source',
-            'none'],
-        default='new')
+    parser.add_argument('-d', '--delay', type=int, default=5, help='seconds between posts to new site')
+    parser.add_argument('-t', '--thumbnail-behaviour',
+                        choices=[
+                            'new',
+                            'source',
+                            'none'],
+                        default='new')
     parser.add_argument(
         '-p',
         '--profile',
         default='default',
         help='Profile to use in thumbnail generation if -t flag set to new')
-    parser.add_argument(
-        '-m',
-        '--max',
-        type=int,
-        default=None,
-        help='Maximum number of stories to post')
-    parser.add_argument(
-        '-f',
-        '--force',
-        action='store_true',
-        help='Skips all checks and inputs')
-    parser.add_argument(
-        '--test',
-        action='store_true',
-        help='Aborts actual upload')
+    parser.add_argument('-m', '--max', type=int, default=None, help='Maximum number of stories to post')
+    parser.add_argument('-f', '--force', action='store_true', help='Skips all checks and inputs')
+    parser.add_argument('--test', action='store_true', help='Aborts actual upload')
+
+    return parser.parse_args()
 
 
 def main():
-    initParser()
-    args = parser.parse_args()
+    args = initParser()
+
     if args.source == args.destination:
         raise Exception('Source and destination sites cannot be the same')
     if args.source == 'sofurry' and args.thumbnail_behaviour == 'source' and args.force is False:
@@ -99,6 +77,7 @@ def main():
                 args.name,
                 source.name,
                 dest.name))
+
         response = input('(Yes/No): ')
         if 'n' in response.lower():
             print('Aborting...')
@@ -164,19 +143,19 @@ def main():
 def determineSite(site: str) -> Website:
     if site == 'furaffinity':
         site = furaffinity.FurAffinity()
-        site.load(__findCookies(site.cookiesRegex))
+        site.load(_find_cookies(site.cookiesRegex))
     elif site == 'sofurry':
         site = sofurry.SoFurry()
-        site.load(__findCookies(site.cookiesRegex))
+        site.load(_find_cookies(site.cookiesRegex))
     elif site == 'weasyl':
         site = weasyl.Weasyl()
-        site.load(__findCookies(site.cookiesRegex))
+        site.load(_find_cookies(site.cookiesRegex))
     else:
         raise Exception("Website '{}' unrecognised".format(site))
     return site
 
 
-def __findCookies(regex: str) -> str:
+def _find_cookies(regex: str) -> str:
     for file in os.listdir(os.getcwd()):
         if re.match(regex, file):
             return file

@@ -7,37 +7,40 @@ from typing import List, TextIO
 import bs4
 
 
-def parseStringBBcode(line: str) -> str:
+def parseStringBBcode(in_line: str) -> str:
     """Parse HTML tags to add BBcode tags to text"""
     out_line = ''
-    if line.text != '':
-        for child in line.children:
+    if in_line.text != '':
+        for child in in_line.children:
             text = child.text
             if 'italic' in child.attrs['style']:
                 text = '[I]' + text + '[/I]'
             if 'font-weight' in child.attrs['style']:
                 text = '[B]' + text + '[/B]'
             out_line = out_line + text
+
     return out_line
 
 
-def parseStringMarkdown(line: str) -> str:
+def parseStringMarkdown(in_line: str) -> str:
     """Parse HTML tags to markdown"""
     out_line = ''
-    if line.text != '':
-        for child in line.children:
+    if in_line.text != '':
+        for child in in_line.children:
             text = child.text
             if 'italic' in child.attrs['style']:
                 text = '*' + text + '*'
             if 'font-weight' in child.attrs['style']:
                 text = '**' + text + '**'
             out_line = out_line + text
+
     return out_line
 
 
 def findFiles(directory: str, finalFormat: str):
     """Function to format all files in a directory"""
     files = os.listdir(directory)
+
     # create list of all html files in directory
     html_files = [(directory + '\\' + file)
                   for file in files if file.endswith('html')]
@@ -49,6 +52,9 @@ def findFiles(directory: str, finalFormat: str):
             formatted = formatFileBBcode(htmlpage)
         elif finalFormat == 'markdown':
             formatted = formatFileMarkdown(htmlpage)
+
+        htmlpage.close()
+
         with open(filename.split('.')[0] + 'formatted.txt', 'w', encoding='UTF-8') as storyfile:
             for part in formatted:
                 storyfile.write(part)

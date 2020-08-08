@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 
 import argparse
-from furryposter.websites import sofurry, weasyl, furaffinity
-from furryposter.websites.website import AuthenticationError, WebsiteError, Website
+import builtins
+import http.cookiejar
 import os
 import pathlib
 import re
-import http.cookiejar
-from io import StringIO, TextIOWrapper, BufferedReader
+from io import BufferedReader, StringIO, TextIOWrapper
 from typing import Optional
-from furryposter.utilities.thumbnailgen import thumbnailerrors
-from furryposter.utilities.fileconcat import concatFiles
+
 from furryposter.story import Story
-import builtins
+from furryposter.utilities.fileconcat import concatFiles
+from furryposter.utilities.thumbnailgen import thumbnailerrors
+from furryposter.websites import furaffinity, sofurry, weasyl
+from furryposter.websites.website import (AuthenticationError, Website,
+                                          WebsiteError)
 
 parser = argparse.ArgumentParser(
     prog="furrystoryuploader",

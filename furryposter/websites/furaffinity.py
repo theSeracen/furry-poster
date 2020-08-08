@@ -7,7 +7,6 @@ from typing import BinaryIO, List, Optional, TextIO
 
 import bs4
 import requests
-
 from furryposter.story import Story
 from furryposter.utilities import markdownformatter
 from furryposter.websites.website import (AuthenticationError, Website,
@@ -109,7 +108,7 @@ class FurAffinity(Website):
 
     def testAuthentication(self):
         """Test that the user is properly authenticated on the site"""
-        # try to get a restricted page and error on bad result
+
         testpage = requests.get(
             "https://www.furaffinity.net/controls/settings/",
             cookies=self.cookie)
@@ -125,79 +124,87 @@ class FurAffinity(Website):
         self.testAuthentication()
         s = requests.Session()
         s.cookies = self.cookie
-        galPage = 1
+
+        gallery_page = 1
         submissions = []
+
         userGallery = 'http://www.furaffinity.net/gallery/{}/{}'.format(
-            user, galPage)
-        foundSubs = self.__getGalleryPage(userGallery)
+            user, gallery_page)
+        foundSubs = self._get_gallery_page(userGallery)
+
         while foundSubs:
             for sub in foundSubs:
-                submissions.append(
-                    'http://www.furaffinity.net{}'.format(sub.get('href')))
-            galPage += 1
+                submissions.append('http://www.furaffinity.net{}'.format(sub.get('href')))
+
+            gallery_page += 1
             userGallery = 'http://www.furaffinity.net/gallery/{}/{}'.format(
-                user, galPage)
-            foundSubs = self.__getGalleryPage(userGallery)
+                user, gallery_page)
+            foundSubs = self._get_gallery_page(userGallery)
+
         uniqueSubs = []
         for sub in submissions:
             if sub not in uniqueSubs:
                 uniqueSubs.append(sub)
+
         uniqueSubs.reverse()
+
         return uniqueSubs
 
     def parseSubmission(self, url: str) -> Optional[Story]:
         s = requests.Session()
         s.cookies = self.cookie
+
         page = s.get(url)
         soup = bs4.BeautifulSoup(page.text, 'html.parser')
         subtype = soup.find('span', {'class': 'category-name'}).text
+
         if subtype != 'Story':
             return None
 
         title = soup.find('div', {'class': 'submission-title'}).text.strip()
-        description = self.__parseHTMLDescTags(
-            soup.find('div', {'class': 'submission-description'})).strip()
+        description = self._parse_html_desc_tags(soup.find('div', {'class': 'submission-description'})).strip()
+
         rawTags = soup.findAll('span', {'class': 'tags'})
         tags = []
         for tag in rawTags:
             tags.append(tag.text)
         tags = ', '.join(tags)
-        rating = soup.find(
-            'span', {
-                'class': 'rating-box'}).text.lower().strip()
+
+        rating = soup.find('span', {'class': 'rating-box'}).text.lower().strip()
         if rating == 'mature':
             rating = 'adult'
-        source = s.get('http:{}'.format(soup.find('a', {'href': re.compile(
-            r'//d.facdn.net/art/.*')}).get('href'))).content.decode('utf-8', 'ignore')
+
+        source = s.get('http:{}'.format(soup.find('a', {
+            'href': re.compile(r'//d.facdn.net/art/.*')}).get('href'))).content.decode('utf-8', 'ignore')
         story = Story('bbcode', title, description, tags, rating)
+        story.content = source
 
         thumbnail = soup.find(
-            'img', {'data-fullview-src': re.compile(r'//d.facdn.net/.*\.thumbnail\..*')}).get('data-fullview-src')
-        story.content = source
+            'img', {
+                'data-fullview-src': re.compile(r'//d.facdn.net/.*\.thumbnail\..*')}).get('data-fullview-src')
         if thumbnail is not None:
-            story.loadThumbnail('default', io.BytesIO(
-                s.get('http:{}'.format(thumbnail)).content))
+            story.loadThumbnail('default', io.BytesIO(s.get('http:{}'.format(thumbnail)).content))
         return story
 
-    def __getGalleryPage(self, url: str) -> List[bs4.Tag]:
+    def _get_gallery_page(self, url: str) -> List[bs4.Tag]:
         page = requests.get(url, cookies=self.cookie)
         soup = bs4.BeautifulSoup(page.text, 'html.parser')
         return soup.findAll('a', {'href': re.compile(r'/view/\d*')})
 
-    def __parseHTMLDescTags(self, masterTag: bs4.Tag) -> str:
-        desc = ''
-        for tag in masterTag.children:
+    def _parse_html_desc_tags(self, master_tag: bs4.Tag) -> str:
+        description = ''
+        for tag in master_tag.children:
             if tag.name == 'i':
-                desc = desc + '*{}*'.format(tag.text)
+                description = description + '*{}*'.format(tag.text)
             elif tag.name == 'b':
-                desc = desc + '**{}**'.format(tag.text)
+                description = description + '**{}**'.format(tag.text)
             elif tag.name == 'a':
-                desc = desc + '[{}]({})'.format(tag.text, tag.get('href'))
+                description = description + '[{}]({})'.format(tag.text, tag.get('href'))
             elif isinstance(tag, bs4.NavigableString):
-                desc = desc + tag
+                description = description + tag
             else:
-                desc = desc + self.__parseHTMLDescTags(tag)
-        return desc
+                description = description + self._parse_html_desc_tags(tag)
+        return description
 
 
 if __name__ == "__main__":

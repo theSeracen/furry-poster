@@ -2,116 +2,116 @@ import configparser
 from io import BytesIO
 from typing import List, Tuple
 
-from PIL import Image, ImageDraw, ImageFont
-
 from furryposter.utilities.thumbnailgen.thumbnailerrors import (
     ThumbnailError, ThumbnailSizingError)
+from PIL import Image, ImageDraw, ImageFont
 
 configs = None
 
 
-def __createBase() -> Image:
+def _createBase() -> Image:
     """Create the thumbnail base"""
-    backcolour = tuple((int(val) for val in configs.get('backcolour').split(', ')))
-    base = Image.new(
-        'RGB',
-        (configs.getint('width'), configs.getint('height')),
-        backcolour)
+    background_colour = tuple((int(val) for val in configs.get('backcolour').split(', ')))
+    base = Image.new('RGB',
+                     (configs.getint('width'), configs.getint('height')),
+                     background_colour)
+
     return base
 
 
-def __determineOptimalTextSize(
+def _determineOptimalTextSize(
         text: str,
         maxSize: int,
         doingTags: bool) -> int:
     """Function to find the biggest text size that fits in the given space"""
-    textSize = 5
+
+    font_size = 5
     if doingTags:
-        sizeIndex = 1
+        size_index = 1
     else:
-        sizeIndex = 0
-    font = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeSerif.ttf', textSize)
-    while font.getsize_multiline(text)[sizeIndex] < maxSize:
+        size_index = 0
+
+    font = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeSerif.ttf', font_size)
+    while font.getsize_multiline(text)[size_index] < maxSize:
         if doingTags:
             if font.getsize_multiline(text)[0] >= (configs.getint('width') *
                                                    0.75):  # make sure that it doesn't cover more than 75% of width
                 break
-        textSize += 1
-        font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", textSize)
+        font_size += 1
+        font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", font_size)
 
-    return textSize - 1
+    return font_size - 1
 
 
-def __findOptimalTitle(title: str) -> Tuple[str, int]:
+def _findOptimalTitle(title: str) -> Tuple[str, int]:
     """Function to split up long titles into multiline strings to get the best size"""
-    titleCut = -1
-    titleStart = tuple((int(val) for val in configs.get('titleStartCoords').split(', ')))
+    title_cut_position = -1
+    title_starting_pos = tuple((int(val) for val in configs.get('titleStartCoords').split(', ')))
 
-    titleSize = __determineOptimalTextSize(title, (configs.getint('width') - titleStart[0]), False)
-    text = title
+    titleSize = _determineOptimalTextSize(title, (configs.getint('width') - title_starting_pos[0]), False)
+    title_text = title
     while titleSize < configs.getint('minTitleSize'):
-        text = title.split(' ')
-        if abs(titleCut) >= len(text):
+        title_text = title.split(' ')
+        if abs(title_cut_position) >= len(title_text):
             raise ThumbnailSizingError('Cannot find best title size')
-        text = ' '.join(text[:titleCut]) + '\n' + ' '.join(text[titleCut:]).replace('\n', ' ')
+        title_text = ' '.join(title_text[:title_cut_position]) + '\n' + \
+            ' '.join(title_text[title_cut_position:]).replace('\n', ' ')
 
-        titleSize = __determineOptimalTextSize(
-            text, (configs.getint('width') - titleStart[0]), False)
-        titleCut -= 1
+        titleSize = _determineOptimalTextSize(
+            title_text, (configs.getint('width') - title_starting_pos[0]), False)
+        title_cut_position -= 1
 
-    return text, titleSize
+    return title_text, titleSize
 
 
-def __addText(title: str, tags: List[str], base: Image) -> Image:
+def _addText(title: str, tags: List[str], base: Image) -> Image:
     """Add the title and tags to the base image"""
     # find the best size for the title
-    titleStart = tuple((int(val)
-                        for val in configs.get('titleStartCoords').split(', ')))
+    title_coordinates = tuple((int(val) for val in configs.get('titleStartCoords').split(', ')))
 
-    title, titlesize = __findOptimalTitle(title)
+    title, titlesize = _findOptimalTitle(title)
     font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", titlesize)
 
     # max out the size and then centre if too big
     if titlesize > configs.getint('maxTitleSize'):
         titlesize = configs.getint('maxTitleSize')
         font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSerif.ttf", titlesize)
-        wid, hei = font.getsize_multiline(title)
-        newTitlex = (base.width - wid) / 2
-        titleStart = (newTitlex, titleStart[1])
+        title_width, title_height = font.getsize_multiline(title)
+        new_title_x = (base.width - title_width) / 2
+        title_coordinates = (new_title_x, title_coordinates[1])
 
     titleColour = tuple((int(val) for val in configs.get('titleColour').split(', ')))
 
     drawer = ImageDraw.Draw(base)
 
-    drawer.multiline_text(titleStart, title, titleColour, font, align='center')
+    drawer.multiline_text(title_coordinates, title, titleColour, font, align='center')
     titlewidth, titleheight = font.getsize_multiline(title)
 
     starty = titleheight + int(configs.getint('titleTagSepDist'))
     tags = '\n'.join(tags)
-    tagsize = __determineOptimalTextSize(tags, (configs.getint(
+    tagsize = _determineOptimalTextSize(tags, (configs.getint(
         'width') - starty - configs.getint('tagBottomBorder')), True)
+
     # if the tags are too close in size to the title, reduce
     if abs(titlesize - tagsize) <= 10:
         tagsize = titlesize - 11
 
     font = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeSerif.ttf', tagsize)
 
-    tagswidth, tagsheight = font.getsize_multiline(tags)
-    startx = (base.width - tagswidth) / 2
+    tag_width, tag_height = font.getsize_multiline(tags)
+    tag_start_x = (base.width - tag_width) / 2
     font = ImageFont.truetype('/usr/share/fonts/truetype/freefont/FreeSerif.ttf', tagsize - 1)
-    tagColour = tuple((int(val) for val in configs.get('tagColour').split(', ')))
-    drawer.multiline_text((startx, starty), tags, tagColour, font, align='center')
+    tag_colour = tuple((int(val) for val in configs.get('tagColour').split(', ')))
+    drawer.multiline_text((tag_start_x, starty), tags, tag_colour, font, align='center')
 
     return base
 
 
-def makeThumbnail(
-        title: str,
-        tags: List[str],
-        configSection: str = 'default') -> BytesIO:
+def makeThumbnail(title: str, tags: List[str], configSection: str = 'default') -> BytesIO:
     parsedOptions = configparser.ConfigParser()
     parsedOptions.read_file(
         open('./furryposter/utilities/thumbnailgen/thumbnail.config', 'r', encoding='utf-8'))
+
     global configs
     try:
         configs = parsedOptions[configSection]
@@ -124,10 +124,11 @@ def makeThumbnail(
 
     tags = [tag.title() for tag in tags]
 
-    thumbnail = __createBase()
-    thumbnail = __addText(title, tags, thumbnail)
+    thumbnail = _createBase()
+    thumbnail = _addText(title, tags, thumbnail)
     thumbfile = BytesIO()
     thumbnail.save(thumbfile, 'PNG')
+
     return thumbfile
 
 

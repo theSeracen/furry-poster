@@ -8,7 +8,6 @@ from typing import BinaryIO, Dict, List, TextIO
 
 import bs4
 import requests
-
 from furryposter.story import Story
 from furryposter.websites.website import (AuthenticationError, Website,
                                           WebsiteError)
@@ -28,20 +27,18 @@ class SoFurry(Website):
             story: TextIO,
             thumbnail):
         """Send story and submit it via POST"""
+
         s = requests.Session()
         s.cookies = self.cookie
         tags = self.validateTags(tags)
+
         # sofurry requires text to be submitted, not a story file
         story = ''.join(story.readlines())
 
         page = s.get('https://www.sofurry.com/upload/details?contentType=0')
-        secret = bs4.BeautifulSoup(
-            page.content, 'html.parser').find(
-            'input', {
-                'name': 'UploadForm[P_id]'})['value']
-        token = re.search(
-            "site_csrf_token_value = \'(.*)\'",
-            page.text).group(1)
+        secret = bs4.BeautifulSoup(page.content, 'html.parser').find(
+            'input', {'name': 'UploadForm[P_id]'})['value']
+        token = re.search("site_csrf_token_value = \'(.*)\'", page.text).group(1)
 
         params = {
             'UploadForm[P_id]': secret,
@@ -79,45 +76,47 @@ class SoFurry(Website):
         user = json.loads(
             s.get('http://api2.sofurry.com/std/getUserProfile', params={'username': user}).content)
         page = 1
-        subs = []
+        submissions = []
+
         while True:
             js = json.loads(
-                s.get(
-                    'https://api2.sofurry.com/browse/user/stories?uid={}&format=json&&stories-page={}'.format(user['userID'], page),
-                    params={'from': 'all time'}).content)
-            subs.extend(js['items'])
+                s.get('https://api2.sofurry.com/browse/user/stories?uid={}&format=json&&stories-page={}'.format(user['userID'], page),
+                      params={'from': 'all time'}).content)
+            submissions.extend(js['items'])
             if len(js['items']) < 30:
                 break
             page += 1
-        subs.reverse()
-        return subs
 
-    def parseSubmission(self, sub: Dict) -> Story:
-        subExtra = json.loads(
-            requests.get(
-                'http://api2.sofurry.com/std/getSubmissionDetails',
-                params={
-                    'id': sub['id']}).content)
-        if sub['contentLevel'] == '0':
+        submissions.reverse()
+        return submissions
+
+    def parseSubmission(self, submission: Dict) -> Story:
+        extra_submission_details = json.loads(
+            requests.get('http://api2.sofurry.com/std/getSubmissionDetails',
+                         params={'id': submission['id']}).content)
+
+        if submission['contentLevel'] == '0':
             rating = 'general'
         else:
             rating = 'adult'
+
         story = Story(
             'bbcode',
-            sub['title'],
-            sub['description'],
-            sub['tags'],
+            submission['title'],
+            submission['description'],
+            submission['tags'],
             rating)
+
         content = requests.get(
-            subExtra['contentSourceUrl']).content.decode(
+            extra_submission_details['contentSourceUrl']).content.decode(
             encoding='utf-8', errors='ignore')
         content = re.sub(r'<br.*?>', '\n', content)
         story.loadContent(io.StringIO(content))
-        if subExtra['thumbnailSourceUrl'] is not None:
-            story.loadThumbnail(
-                'default', io.BytesIO(
-                    requests.get(
-                        subExtra['thumbnailSourceUrl']).content))
+
+        if extra_submission_details['thumbnailSourceUrl'] is not None:
+            story.loadThumbnail('default', io.BytesIO(requests.get(
+                extra_submission_details['thumbnailSourceUrl']).content))
+
         return story
 
     def validateTags(self, tags: str) -> str:
