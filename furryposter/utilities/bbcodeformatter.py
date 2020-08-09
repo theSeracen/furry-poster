@@ -10,7 +10,7 @@ def parseStringMarkdown(line: str) -> str:
         _linksBBBcodetoMarkdown,
         _doubleNewLines]
     for formatfunc in formattingFunctions:
-        line = _boldBBcodetoMarkdown(line)
+        line = formatfunc(line)
     return line
 
 
