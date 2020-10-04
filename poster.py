@@ -92,7 +92,7 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
     """Initialise site with cookies"""
 
     cookiesLoc = None
-    for file in os.listdir(os.getcwd()):
+    for file in os.listdir('res/'):
         if re.match(regexString, file):
             cookiesLoc = file
             break
@@ -171,9 +171,9 @@ def main():
         raise Exception('No tags specified!')
 
     if args.post_script:
-        if os.path.exists('post-script.txt'):
+        if os.path.exists('res/post-script.txt'):
             print('Post-script found')
-            with open('post-script.txt', 'r', encoding='utf-8') as postScriptFile:
+            with open('res/post-script.txt', 'r', encoding='utf-8') as postScriptFile:
                 args.description = args.description + '\n\n' + ''.join(postScriptFile.readlines())
         else:
             if args.ignore_errors:
@@ -227,7 +227,7 @@ def main():
         submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
 
     if args.warning:
-        with open('content-warning.txt', 'r') as warningFile:
+        with open('res/content-warning.txt', 'r') as warningFile:
             warning = warningFile.read()
             submission.content = warning + '\n\n' + ('~' * 10) + '\n\n' + submission.content
 
