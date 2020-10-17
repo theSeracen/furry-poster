@@ -92,8 +92,8 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
     """Initialise site with cookies"""
 
     cookiesLoc = None
-    for file in os.listdir('res/'):
-        if re.match(regexString, file):
+    for file in pathlib.Path('res/').iterdir():
+        if re.match(regexString, file.name):
             cookiesLoc = file
             break
     if cookiesLoc is None:

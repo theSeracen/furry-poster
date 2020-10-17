@@ -3,6 +3,7 @@
 import http.cookiejar
 import io
 import re
+import tempfile
 from typing import BinaryIO, List, Optional, TextIO
 
 import bs4
@@ -11,6 +12,9 @@ from furryposter.story import Story
 from furryposter.utilities import markdownformatter
 from furryposter.websites.website import (AuthenticationError, Website,
                                           WebsiteError)
+from selenium import webdriver
+from selenium.common.exceptions import WebDriverException, InvalidCookieDomainException
+from selenium.webdriver.firefox import options
 
 
 class FurAffinity(Website):
@@ -32,79 +36,63 @@ class FurAffinity(Website):
             thumbnail):
         """Send story and submit it via POST"""
 
-        s = requests.Session()
-        s.cookies = self.cookie
-        tags = self.validateTags(tags)
-        description = markdownformatter.parseStringBBcode(description)
+        firefox_options = options.Options()
+        firefox_options.headless = True
+        with webdriver.Firefox(options=firefox_options) as driver:
+            driver.set_window_size(1120, 550)
 
-        # type selection
-        page = s.post(
-            'http://www.furaffinity.net/submit/',
-            params={
-                'part': 2,
-                'submission_type': 'story'})
-        if page.status_code != 200:
-            raise WebsiteError('An error has occurred when trying to reach FurAffinity')
-        elif bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name': 'part'})['value'] == '2':
-            raise WebsiteError("Posting didn't move on from first part")
+            driver.get('http://www.furaffinity.net/')
 
-        # file upload stage
-        key = bs4.BeautifulSoup(
-            page.content, 'html.parser').find('div', {'class': 'content'}).find('input', {'name': 'key'})['value']
-        if thumbnail is not None:
-            uploadFiles = {'submission': story, 'thumbnail': thumbnail}
-        else:
-            uploadFiles = {'submission': story}
-        page = s.post('http://www.furaffinity.net/submit/story/4',
-                      data={
-                          'part': '3',
-                          'key': key,
-                          'submission_type': 'story'},
-                      files=uploadFiles)
+            for cookie in self.cookie:
+                cookie_dict = {
+                    'domain': cookie.domain,
+                    'name': cookie.name,
+                    'value': cookie.value,
+                    'secure': cookie.secure}
+                if cookie.expires:
+                    cookie_dict['expiry'] = cookie.expires
+                if cookie.path_specified:
+                    cookie_dict['path'] = cookie.path
+                try:
+                    driver.add_cookie(cookie_dict)
+                except InvalidCookieDomainException:
+                    pass
 
-        if 'Uploaded file has a filesize of 0 bytes' in page.text:
-            raise WebsiteError('One of the uploaded files read as 0 bytes')
-        elif 'Error encountered' in page.text:
-            raise WebsiteError('Error encountered with file upload')
-        elif 'submission files could not be found' in page.text:
-            raise WebsiteError('Submisssion files could not be found')
-        elif bs4.BeautifulSoup(page.content, 'html.parser').find('input', {'name': 'part'})['value'] == '2':
-            raise WebsiteError('Furaffinity submission stage reverted')
-        elif page.status_code != 200:
-            raise WebsiteError('The upload page returned with an error')
+            driver.get('https://www.furaffinity.net/submit/')
 
-        # final stage
-        key = bs4.BeautifulSoup(
-            page.content, 'html.parser').find(
-            'div', {
-                'class': 'content'}).find(
-                'input', {
-                    'name': 'key'})['value']
-        cat = bs4.BeautifulSoup(
-            page.content, 'html.parser').find(
-            'input', {
-                'name': 'cat_duplicate'})['value']
+            # first section: type selection
+            driver.find_element_by_xpath('/html/body/div[3]/div[2]/div/div/form/section/div[2]/h4[3]/label').click()
+            driver.find_element_by_xpath('/html/body/div[3]/div[2]/div/div/form/section/div[2]/div[2]/button').click()
 
-        # TODO add customisation for hardcoded specifications and categories
-        storyParams = {
-            'key': key,
-            'part': 5,
-            'cat_duplicate': cat,
-            'submission_type': 'story',
-            'atype': 1,
-            'species': 1,
-            'gender': 0,
-            'rating': self.ratings[passedRating],
-            'title': title,
-            'message': description,
-            'keywords': tags,
-            'scrap': 0}
+            # second section: file upload
+            # selenium can only work with an actual file, so use tempfile
+            try:
+                tmpstory = tempfile.NamedTemporaryFile(mode='w', suffix='.txt')
+                tmpstory.write(story.read())
+                if thumbnail:
+                    tmpthumbnail = tempfile.NamedTemporaryFile(suffix='.png')
+                    tmpthumbnail.write(thumbnail.read())
 
-        page = s.post(
-            'https://www.furaffinity.net/submit/story/4',
-            data=storyParams)
-        if 'Security code missing or invalid' in page.text or 'view' not in page.url:
-            raise WebsiteError("FurAffinity submission failed")
+                    driver.find_element_by_xpath(
+                        '/html/body/div[3]/div[2]/div/div/form/section/div[2]/input[2]').send_keys(tmpthumbnail.name)
+                driver.find_element_by_xpath(
+                    '/html/body/div[3]/div[2]/div/div/form/section/div[2]/input[1]').send_keys(tmpstory.name)
+
+                driver.find_element_by_xpath('/html/body/div[3]/div[2]/div/div/form/section/div[2]/div/button').click()
+            finally:
+                tmpstory.close()
+                if thumbnail:
+                    tmpthumbnail.close()
+
+            # third section: story details
+            # make the story explicit
+            input()
+            driver.find_element_by_xpath(
+                '/html/body/div[3]/div[2]/div/div/div/form/section[1]/div[2]/div/div/div[1]/label[3]/input').click()
+            driver.find_element_by_xpath('//*[@id="title"]').send_keys(title)
+            driver.find_element_by_xpath('//*[@id="message"]').send_keys(description)
+            driver.find_element_by_xpath('//*[@id="keywords"]').send_keys(tags)
+            driver.find_element_by_xpath('//*[@id="finalize"]').click()
 
     def testAuthentication(self):
         """Test that the user is properly authenticated on the site"""
