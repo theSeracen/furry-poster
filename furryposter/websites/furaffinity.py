@@ -13,7 +13,9 @@ from furryposter.utilities import markdownformatter
 from furryposter.websites.website import (AuthenticationError, Website,
                                           WebsiteError)
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException, InvalidCookieDomainException
+from selenium.common.exceptions import (InvalidCookieDomainException,
+                                        NoSuchElementException,
+                                        WebDriverException)
 from selenium.webdriver.firefox import options
 
 
@@ -38,61 +40,67 @@ class FurAffinity(Website):
 
         firefox_options = options.Options()
         firefox_options.headless = True
-        with webdriver.Firefox(options=firefox_options) as driver:
-            driver.set_window_size(1120, 550)
 
-            driver.get('http://www.furaffinity.net/')
+        try:
+            with webdriver.Firefox(options=firefox_options) as driver:
+                driver.set_window_size(1120, 550)
 
-            for cookie in self.cookie:
-                cookie_dict = {
-                    'domain': cookie.domain,
-                    'name': cookie.name,
-                    'value': cookie.value,
-                    'secure': cookie.secure}
-                if cookie.expires:
-                    cookie_dict['expiry'] = cookie.expires
-                if cookie.path_specified:
-                    cookie_dict['path'] = cookie.path
+                driver.get('http://www.furaffinity.net/')
+
+                for cookie in self.cookie:
+                    cookie_dict = {
+                        'domain': cookie.domain,
+                        'name': cookie.name,
+                        'value': cookie.value,
+                        'secure': cookie.secure}
+                    if cookie.expires:
+                        cookie_dict['expiry'] = cookie.expires
+                    if cookie.path_specified:
+                        cookie_dict['path'] = cookie.path
+                    try:
+                        driver.add_cookie(cookie_dict)
+                    except InvalidCookieDomainException:
+                        pass
+
+                driver.get('https://www.furaffinity.net/submit/')
+
+                # first section: type selection
+                driver.find_element_by_xpath('/html/body/div[3]/div[2]/div/div/form/section/div[2]/h4[3]/label').click()
+                driver.find_element_by_xpath(
+                    '/html/body/div[3]/div[2]/div/div/form/section/div[2]/div[2]/button').click()
+
+                # second section: file upload
+                # selenium can only work with an actual file, so use tempfile
                 try:
-                    driver.add_cookie(cookie_dict)
-                except InvalidCookieDomainException:
-                    pass
+                    tmpstory = tempfile.NamedTemporaryFile(mode='w', suffix='.txt')
+                    tmpstory.write(story.read())
+                    if thumbnail:
+                        tmpthumbnail = tempfile.NamedTemporaryFile(suffix='.png')
+                        tmpthumbnail.write(thumbnail.read())
 
-            driver.get('https://www.furaffinity.net/submit/')
-
-            # first section: type selection
-            driver.find_element_by_xpath('/html/body/div[3]/div[2]/div/div/form/section/div[2]/h4[3]/label').click()
-            driver.find_element_by_xpath('/html/body/div[3]/div[2]/div/div/form/section/div[2]/div[2]/button').click()
-
-            # second section: file upload
-            # selenium can only work with an actual file, so use tempfile
-            try:
-                tmpstory = tempfile.NamedTemporaryFile(mode='w', suffix='.txt')
-                tmpstory.write(story.read())
-                if thumbnail:
-                    tmpthumbnail = tempfile.NamedTemporaryFile(suffix='.png')
-                    tmpthumbnail.write(thumbnail.read())
+                        driver.find_element_by_xpath(
+                            '/html/body/div[3]/div[2]/div/div/form/section/div[2]/input[2]').send_keys(tmpthumbnail.name)
+                    driver.find_element_by_xpath(
+                        '/html/body/div[3]/div[2]/div/div/form/section/div[2]/input[1]').send_keys(tmpstory.name)
 
                     driver.find_element_by_xpath(
-                        '/html/body/div[3]/div[2]/div/div/form/section/div[2]/input[2]').send_keys(tmpthumbnail.name)
+                        '/html/body/div[3]/div[2]/div/div/form/section/div[2]/div/button').click()
+                finally:
+                    tmpstory.close()
+                    if thumbnail:
+                        tmpthumbnail.close()
+
+                # third section: story details
+                # make the story explicit
+                input()
                 driver.find_element_by_xpath(
-                    '/html/body/div[3]/div[2]/div/div/form/section/div[2]/input[1]').send_keys(tmpstory.name)
-
-                driver.find_element_by_xpath('/html/body/div[3]/div[2]/div/div/form/section/div[2]/div/button').click()
-            finally:
-                tmpstory.close()
-                if thumbnail:
-                    tmpthumbnail.close()
-
-            # third section: story details
-            # make the story explicit
-            input()
-            driver.find_element_by_xpath(
-                '/html/body/div[3]/div[2]/div/div/div/form/section[1]/div[2]/div/div/div[1]/label[3]/input').click()
-            driver.find_element_by_xpath('//*[@id="title"]').send_keys(title)
-            driver.find_element_by_xpath('//*[@id="message"]').send_keys(description)
-            driver.find_element_by_xpath('//*[@id="keywords"]').send_keys(tags)
-            driver.find_element_by_xpath('//*[@id="finalize"]').click()
+                    '/html/body/div[3]/div[2]/div/div/div/form/section[1]/div[2]/div/div/div[1]/label[3]/input').click()
+                driver.find_element_by_xpath('//*[@id="title"]').send_keys(title)
+                driver.find_element_by_xpath('//*[@id="message"]').send_keys(description)
+                driver.find_element_by_xpath('//*[@id="keywords"]').send_keys(tags)
+                driver.find_element_by_xpath('//*[@id="finalize"]').click()
+        except NoSuchElementException as e:
+            pass
 
     def testAuthentication(self):
         """Test that the user is properly authenticated on the site"""
