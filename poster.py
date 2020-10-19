@@ -3,9 +3,11 @@
 import argparse
 import builtins
 import http.cookiejar
+import logging
 import os
 import pathlib
 import re
+import sys
 from io import BufferedReader, StringIO, TextIOWrapper
 from typing import Optional
 
@@ -19,6 +21,7 @@ from furryposter.websites.website import (AuthenticationError, Website,
 parser = argparse.ArgumentParser(
     prog="furrystoryuploader",
     description="Post stories to furry websites")
+logger = logging.getLogger()
 
 
 def initParser():
@@ -86,6 +89,7 @@ def initParser():
         help='debugging flag; if included, the program will do everything but submit')
     parser.add_argument('-O', '--outputdir', help='The output directory for any files to be saved to')
     parser.add_argument('-c', '--concatenate', action='store_true', help='concatenate all files found in folder')
+    parser.add_argument('-v', '--verbose', action='count')
 
 
 def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[Website]:
@@ -100,18 +104,18 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
         if ignore_errors is False:
             raise AuthenticationError('{} cannot find a cookies file'.format(site.name))
         else:
-            print('{} cannot find cookies; the site will be skipped'.format(site.name))
+            logger.warning('{} cannot find cookies; the site will be skipped'.format(site.name))
     else:
         site.load(cookiesLoc)
         try:
             site.testAuthentication()
         except AuthenticationError:
             if ignore_errors is True:
-                print('{} authentication failed!\nContinuing...'.format(site.name))
+                logger.error('{} authentication failed!\nContinuing...'.format(site.name))
             else:
                 raise
         else:
-            print('{} successfully authenticated'.format(site.name))
+            logger.info('{} successfully authenticated'.format(site.name))
             return site
     return None
 
@@ -119,6 +123,16 @@ def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[W
 def main():
     initParser()
     args = parser.parse_args()
+
+    logger.setLevel(1)
+    stream = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('[%(asctime)s - %(name)s - %(levelname)s] - %(message)s')
+    stream.setFormatter(formatter)
+    stream.setLevel(logging.INFO)
+    logger.addHandler(stream)
+
+    if args.verbose > 0:
+        stream.setLevel(logging.DEBUG)
 
     args.directory = pathlib.Path(args.directory)
 
@@ -128,7 +142,7 @@ def main():
         args.outputdir = args.directory
 
     if args.offline:
-        print('Offline mode is active')
+        logger.info('Offline mode is active')
     else:
         sites = []
         if args.furaffinity:
@@ -164,20 +178,20 @@ def main():
 
     # error checking
     if args.title == '':
-        raise Exception('No title specified!')
+        raise Exception('No title specified')
     if args.description == '':
-        raise Exception('No description specified!')
+        raise Exception('No description specified')
     if args.tags == '':
-        raise Exception('No tags specified!')
+        raise Exception('No tags specified')
 
     if args.post_script:
         if os.path.exists('res/post-script.txt'):
-            print('Post-script found')
+            logger.info('Post-script found')
             with open('res/post-script.txt', 'r', encoding='utf-8') as postScriptFile:
                 args.description = args.description + '\n\n' + ''.join(postScriptFile.readlines())
         else:
             if args.ignore_errors:
-                print('Post-script file cannot be loaded!\nContinuing...')
+                logger.error('Post-script file cannot be loaded!\nContinuing...')
             else:
                 raise Exception('Post-script file cannot be found')
 
@@ -198,14 +212,15 @@ def main():
 
     # find all of the story files in the folder directory
     if len(dirfiles) == 0:
-        raise Exception('No story file of format {} found!'.format(args.format))
+        raise Exception('No story file of format {} found'.format(args.format))
 
     elif len(dirfiles) == 1:
         storyLoc = dirfiles[0]
-        print('File found: {}'.format(storyLoc))
+        logger.info('Story file found: {}'.format(storyLoc))
 
     elif len(dirfiles) > 1:
         if args.concatenate:
+            logger.debug('Concatenating {} found files'.format(len(dirfiles)))
             dirfiles = [str(pathlib.PurePath(dirfile)) for dirfile in dirfiles]
             storyLoc = StringIO(concatFiles(dirfiles))
         else:
@@ -227,6 +242,7 @@ def main():
         submission.loadContent(open(storyLoc, 'r', encoding='utf-8'))
 
     if args.warning:
+        logger.info('Content warning found')
         with open('res/content-warning.txt', 'r') as warningFile:
             warning = warningFile.read()
             submission.content = warning + '\n\n' + ('~' * 10) + '\n\n' + submission.content
@@ -235,29 +251,29 @@ def main():
     if args.generate_thumbnail:
         try:
             submission.loadThumbnail(args.generate_thumbnail)
+            logger.debug('Thumbnail generated')
         except thumbnailerrors.ThumbnailSizingError:
             if args.ignore_errors:
-                print('Thumbnail generation has failed!')
+                logger.error('Thumbnail generation has failed!')
                 thumbnailPass = None
             else:
                 raise
     else:
         thumbnailLoc = None
         if args.thumbnail:
-
             ends = ['png', 'jpg']
             dirfiles = args.directory.iterdir()
             dirfiles = list(filter(lambda file: file.suffix in ends, dirfiles))
 
             if len(dirfiles) == 0:
                 if args.ignore_errors:
-                    print('No thumbnail found!\nContinuing...')
+                    logger.warning('No thumbnail found')
                 else:
-                    raise Exception('No thumbnail file found!')
+                    raise Exception('No thumbnail file found')
 
             elif len(dirfiles) == 1:
                 thumbnailLoc = dirfiles[0]
-                print('File found: {}'.format(thumbnailLoc))
+                logger.info('Thumbnail file found')
                 submission.loadThumbnail(open(thumbnailLoc, 'rb'))
 
             elif len(dirfiles) > 1:
@@ -281,42 +297,41 @@ def main():
         storydest = pathlib.Path(args.outputdir, 'story')
 
     if args.offline or args.messy:
-        print('writing story files...')
+        logger.info('Writing story files')
 
         with open(str(storydest) + 'bbcode.txt', 'w', encoding='utf-8') as file:
             file.write(submission.giveStory('bbcode').getvalue())
-
         with open(str(storydest) + '.md', 'w', encoding='utf-8') as file:
             file.write(submission.giveStory('markdown').getvalue())
+        logger.debug('Written story files')
 
-        print('writing thumbnail...')
         if submission.thumbnail:
             with open(storydest.parent / 'thumbnail.png', 'wb') as file:
                 file.write(submission.giveThumbnail().getvalue())
+        logger.debug('Written thumbnail file')
 
-        print('writing description...')
         with open(storydest.parent / 'description.txt', 'w', encoding='utf-8') as file:
             file.write(submission.giveDescription('bbcode'))
         with open(storydest.parent / 'description.md', 'w', encoding='utf-8') as file:
             file.write(submission.giveDescription('markdown'))
+        logger.debug('Written description files')
 
     if args.offline is False:
         for site in sites:
             try:
-                print('Beginning {} submission'.format(site.name))
-
+                logger.debug('Beginning {} submission'.format(site.name))
                 if args.test:
-                    print('test: {} bypassed'.format(site.name))
+                    logger.degub('Test: {} bypassed'.format(site.name))
                 else:
                     site.submitStory(
                         submission.title, submission.giveDescription(
                             site.preferredFormat), submission.tags, args.rating, submission.giveStory(
                             site.preferredFormat), submission.giveThumbnail())
 
-                print('{} submission completed successfully'.format(site.name))
+                logger.info('{} submission completed successfully'.format(site.name))
             except WebsiteError as e:
                 if args.ignore_errors:
-                    print('{} has failed with exception {}'.format(site.name, e))
+                    logger.error('Submission to {} has failed with exception {}'.format(site.name, e))
                 else:
                     raise
 
