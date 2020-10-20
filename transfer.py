@@ -2,8 +2,10 @@
 
 import argparse
 import builtins
+import logging
 import os
 import re
+import sys
 import time
 
 from tqdm import tqdm
@@ -15,6 +17,7 @@ from furryposter.websites.website import Website
 parser = argparse.ArgumentParser(
     prog="furrytransfer",
     description="Transfer galleries between furry sites")
+logger = logging.getLogger()
 
 
 def initParser():
@@ -54,6 +57,14 @@ def initParser():
 def main():
     args = initParser()
 
+    logger = logging.getLogger()
+    logger.setLevel(1)
+    stream = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('[%(asctime)s - %(name)s - %(levelname)s] - %(message)s')
+    stream.setFormatter(formatter)
+    stream.setLevel(logging.INFO)
+    logger.addHandler(stream)
+
     if args.source == args.destination:
         raise Exception('Source and destination sites cannot be the same')
     if args.source == 'sofurry' and args.thumbnail_behaviour == 'source' and args.force is False:
@@ -64,10 +75,10 @@ def main():
             exit(1)
 
     if args.test:
-        print('Testing is enabled; submissions are disabled')
+        logger.info('Testing is enabled; submissions are disabled')
 
     if args.max:
-        print('Only {} submissions will be transferred'.format(args.max))
+        logger.info('Only {} submissions will be transferred'.format(args.max))
 
     source = determineSite(args.source)
     dest = determineSite(args.destination)
@@ -84,44 +95,40 @@ def main():
             exit(0)
 
     sourceSubmissions = source.crawlGallery(args.name)
-    print('{} submissions in source gallery found'.format(len(sourceSubmissions)))
+    logger.debug('{} submissions in source gallery found'.format(len(sourceSubmissions)))
     destSubmissions = dest.crawlGallery(args.name)
-    print(
-        '{} submissions already in destination gallery'.format(
-            len(destSubmissions)))
+    logger.debug('{} submissions already in destination gallery'.format(len(destSubmissions)))
 
-    print('Processing source stories from {}'.format(source.name))
+    logger.info('Processing source stories from {}'.format(source.name))
 
     sourceStories = []
     for sub in tqdm(sourceSubmissions, dynamic_ncols=True):
         sourceStories.append(source.parseSubmission(sub))
     sourceStories = list(filter(None, sourceStories))
 
-    print('Processing destination stories from {}'.format(dest.name))
+    logger.info('Processing destination stories from {}'.format(dest.name))
     destStories = []
     for sub in tqdm(destSubmissions, dynamic_ncols=True):
         destStories.append(dest.parseSubmission(sub))
     destStories = list(filter(None, destStories))
 
-    print('{} Stories to be transferred'.format(len(sourceStories)))
+    logger.info('{} stories to be transferred'.format(len(sourceStories)))
     destTitles = [story.title for story in destStories]
 
     postCount = 0
     for place, story in enumerate(sourceStories):
         if story.title in destTitles:
-            print(
+            logger.debug(
                 'Skipping {} of {}: {} found in destination gallery'.format(
-                    place + 1,
-                    len(sourceStories),
-                    story.title))
+                    place + 1, len(sourceStories), story.title))
         else:
             if args.thumbnail_behaviour == 'new':
                 story.forceGenThumbnail(args.profile)
             elif args.thumbnail_behaviour == 'none':
                 story.thumbnail = None
 
-            print('Transferring {} of {} --- {}'.format(place +
-                                                        1, len(sourceStories), story.title))
+            logger.debug('Transferring {} of {} --- {}'.format(place +
+                                                               1, len(sourceStories), story.title))
             if args.test is False:
                 dest.submitStory(
                     story.title, story.giveDescription(
@@ -131,13 +138,12 @@ def main():
             postCount += 1
             if args.max:
                 if postCount >= args.max:
-                    print('Posting limit reached!')
+                    logger.info('Posting limit reached!')
                     break
 
             time.sleep(args.delay)
 
-    print('Transfer successfully completed')
-    print('{} stories transferred'.format(postCount))
+    logger.info('{} stories transferred'.format(postCount))
 
 
 def determineSite(site: str) -> Website:
