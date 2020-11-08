@@ -92,7 +92,6 @@ class FurAffinity(Website):
 
                 # third section: story details
                 # make the story explicit
-                input()
                 driver.find_element_by_xpath(
                     '/html/body/div[3]/div[2]/div/div/div/form/section[1]/div[2]/div/div/div[1]/label[3]/input').click()
                 driver.find_element_by_xpath('//*[@id="title"]').send_keys(title)
