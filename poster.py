@@ -89,7 +89,7 @@ def initParser():
         help='debugging flag; if included, the program will do everything but submit')
     parser.add_argument('-O', '--outputdir', help='The output directory for any files to be saved to')
     parser.add_argument('-c', '--concatenate', action='store_true', help='concatenate all files found in folder')
-    parser.add_argument('-v', '--verbose', action='count')
+    parser.add_argument('-v', '--verbose', action='count', default=0)
 
 
 def initSite(regexString: str, site: Website, ignore_errors: bool) -> Optional[Website]:
